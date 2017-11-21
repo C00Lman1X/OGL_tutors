@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 project(GLFW_TMP)
-add_executable(GLFW_TMP main.cpp glad.c)
+add_executable(GLFW_TMP main.cpp GLAD/src/glad.c)
 
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)

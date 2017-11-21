@@ -12,6 +12,12 @@ void framebuffer_size_callback(GLFWwindow* wnd, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
 int main(int argc, char ** argv)
 {
     GLFWwindow* wnd;
@@ -23,6 +29,7 @@ int main(int argc, char ** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    // global callbacks
     glfwSetErrorCallback(error_callback);
 
     wnd = glfwCreateWindow(640, 480, "Yo, GLFW!", NULL, NULL);
@@ -31,6 +38,10 @@ int main(int argc, char ** argv)
         glfwTerminate();
         return -1;
     }
+
+    // window callbacks
+    glfwSetKeyCallback(wnd, key_callback);
+    glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
 
     glfwMakeContextCurrent(wnd);
 
@@ -41,16 +52,16 @@ int main(int argc, char ** argv)
     }
 
     glViewport(0, 0, 640, 480);
-    glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     while(!glfwWindowShouldClose(wnd))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+
         glfwSwapBuffers(wnd);
-
         glfwPollEvents();
-
     }
 
     glfwTerminate();
