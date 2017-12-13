@@ -19,56 +19,66 @@ void main()\n\
 	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); \n\
 }";
 
+GLenum mode = GL_LINE;
+
 void error_callback(int error, const char* description)
 {
-    std::cerr << "Error: " << description << std::endl;
+	std::cerr << "Error: " << description << std::endl;
 }
 
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height)
 {
-    glViewport(0, 0, width, height);
+	glViewport(0, 0, width, height);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+	{
+		if (mode == GL_LINE)
+			mode = GL_FILL;
+		else
+			mode = GL_LINE;
+		glPolygonMode(GL_FRONT_AND_BACK, mode);
+	}
 }
 
 int main(int argc, char ** argv)
 {
-    GLFWwindow* wnd;
+	GLFWwindow* wnd;
 
-    if (!glfwInit())
-        return -1;
+	if (!glfwInit())
+		return -1;
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // global callbacks
-    glfwSetErrorCallback(error_callback);
+	// global callbacks
+	glfwSetErrorCallback(error_callback);
 
-    wnd = glfwCreateWindow(640, 480, "Yo, GLFW!", NULL, NULL);
-    if (!wnd)
-    {
-        glfwTerminate();
-        return -1;
-    }
+	wnd = glfwCreateWindow(640, 480, "Yo, GLFW!", NULL, NULL);
+	if (!wnd)
+	{
+		glfwTerminate();
+		return -1;
+	}
 
-    // window callbacks
-    glfwSetKeyCallback(wnd, key_callback);
-    glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
+	// window callbacks
+	glfwSetKeyCallback(wnd, key_callback);
+	glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
 
-    glfwMakeContextCurrent(wnd);
+	glfwMakeContextCurrent(wnd);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cerr << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
 
-    glViewport(0, 0, 640, 480);
+	glViewport(0, 0, 640, 480);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 	GLuint VAO;
@@ -79,7 +89,7 @@ int main(int argc, char ** argv)
 	glShaderSource(vertexShader, 1, &BASIC_VERTEX_SHADER, NULL);
 	glCompileShader(vertexShader);
 
-	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &BASIC_FRAGMENT_SHADER, NULL);
 	glCompileShader(fragmentShader);
 
@@ -99,9 +109,10 @@ int main(int argc, char ** argv)
 	glLinkProgram(shaderProgram);
 
 	GLfloat vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+		 0.5f,  0.5f, 0.0f, // top right
+		 0.5f, -0.5f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f  // top left
 	};
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
@@ -111,20 +122,28 @@ int main(int argc, char ** argv)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (void*)0);
 	glEnableVertexAttribArray(0);
 
-    while(!glfwWindowShouldClose(wnd))
-    {
-        glClear(GL_COLOR_BUFFER_BIT);
+	GLuint indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+	GLuint EBO;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	while(!glfwWindowShouldClose(wnd))
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        glfwSwapBuffers(wnd);
-        glfwPollEvents();
+		glfwSwapBuffers(wnd);
+		glfwPollEvents();
 	}
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-    glfwTerminate();
-    return 0;
+	glfwTerminate();
+	return 0;
 }
