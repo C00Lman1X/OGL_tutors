@@ -10,13 +10,21 @@ void main()\n\
 {\n\
 	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n\
 }";
-const GLchar* BASIC_FRAGMENT_SHADER = "\
+const GLchar *BASIC_FRAGMENT_SHADER = "\
 #version 330 core\n\
 out vec4 FragColor;\n\
 \n\
 void main()\n\
 {\n\
 	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); \n\
+}";
+const GLchar *BASIC_FRAGMENT_SHADER_YELLOW = "\
+#version 330 core\n\
+out vec4 FragColor;\n\
+\n\
+void main()\n\
+{\n\
+	FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); \n\
 }";
 
 GLenum mode = GL_LINE;
@@ -81,9 +89,8 @@ int main(int argc, char ** argv)
 	glViewport(0, 0, 640, 480);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	GLuint VAO[2];
+	glGenVertexArrays(2, VAO);
 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &BASIC_VERTEX_SHADER, NULL);
@@ -92,6 +99,10 @@ int main(int argc, char ** argv)
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &BASIC_FRAGMENT_SHADER, NULL);
 	glCompileShader(fragmentShader);
+
+	GLuint fragmentShaderYellow = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderYellow, 1, &BASIC_FRAGMENT_SHADER_YELLOW, NULL);
+	glCompileShader(fragmentShaderYellow);
 
 /*	shader compile check */
 // 	int  success;
@@ -108,23 +119,40 @@ int main(int argc, char ** argv)
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
 
-	GLfloat vertices[] = {
-		 0.5f,  0.5f, 0.0f, // top right
-		 0.5f, -0.5f, 0.0f, // bottom right
-		-0.5f, -0.5f, 0.0f, // bottom left
-		-0.5f,  0.5f, 0.0f  // top left
-	};
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLuint shaderProgramYellow = glCreateProgram();
+	glAttachShader(shaderProgramYellow, vertexShader);
+	glAttachShader(shaderProgramYellow, fragmentShaderYellow);
+	glLinkProgram(shaderProgramYellow);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (void*)0);
+	GLfloat vertices[2][9] = {
+		{
+			-1.f, -0.5f, 0.0f,
+			-0.5f,  0.5f, 0.0f,
+		  	0.f, -0.5f, 0.0f
+		},
+		{
+			0.f, 0.5f, 0.0f,
+		 	0.5f, -0.5f, 0.0f,
+		  	1.f, 0.5f, 0.0f
+		}
+	};
+	GLuint VBO[2];
+	glGenBuffers(2, VBO);
+	glBindVertexArray(VAO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]), vertices[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+
+	glBindVertexArray(VAO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[1]), vertices[1], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
 
 	GLuint indices[] = {
-		0, 1, 3,
-		1, 2, 3
+		0, 1, 2,
+		2, 3, 4
 	};
 	GLuint EBO;
 	glGenBuffers(1, &EBO);
@@ -136,7 +164,13 @@ int main(int argc, char ** argv)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shaderProgram);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(VAO[0]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glUseProgram(shaderProgramYellow);
+		glBindVertexArray(VAO[1]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
