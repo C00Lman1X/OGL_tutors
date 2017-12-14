@@ -8,6 +8,7 @@ include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)
 
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl)
+configure_file(${PROJECT_SOURCE_DIR}/textures/wall.jpg ${CMAKE_BINARY_DIR}/textures/wall.jpg)
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
 
