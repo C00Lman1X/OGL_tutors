@@ -15,7 +15,6 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
         fShaderFile.open(fragmentPath);
 
         vShaderFile.read(vShaderCode, 4096);
-        std::cout << vShaderCode;
         fShaderFile.read(fShaderCode, 4096);
 
         vShaderFile.close();
@@ -31,7 +30,6 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
     GLchar infoLog[512];
 
     vertex = glCreateShader(GL_VERTEX_SHADER);
-    std::cout << vShaderCode << std::endl;
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);

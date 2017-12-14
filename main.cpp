@@ -68,6 +68,8 @@ int main(int argc, char ** argv)
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+	//shader.use();
+	//shader.set4Float("offset", 0.5f, 0.0f, 0.0f, 0.0f);
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
@@ -105,7 +107,7 @@ int main(int argc, char ** argv)
 		shader.use();
 		double timeValue = glfwGetTime();
 		float greenValue = sin(timeValue) / 2.0f + 0.5f;
-		shader.set4Float("ourColor", 0.0f, greenValue, 0.0f, 1.0f);
+		shader.set4Float("globalColor", 0.0f, greenValue, 0.0f, 1.0f);
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
