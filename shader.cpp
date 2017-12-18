@@ -12,10 +12,18 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
     try
     {
         vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
+		vShaderFile.seekg(0, vShaderFile.end);
+		int vertexLength = vShaderFile.tellg();
+		vShaderFile.seekg(0, vShaderFile.beg);
+		fShaderFile.open(fragmentPath);
+		fShaderFile.seekg(0, fShaderFile.end);
+		int fragmentLength = fShaderFile.tellg();
+		fShaderFile.seekg(0, fShaderFile.beg);
 
-        vShaderFile.read(vShaderCode, 4096);
-        fShaderFile.read(fShaderCode, 4096);
+        vShaderFile.read(vShaderCode, vertexLength);
+		vShaderCode[vertexLength] = 0;
+		fShaderFile.read(fShaderCode, fragmentLength);
+		fShaderCode[fragmentLength] = 0;
 
         vShaderFile.close();
         fShaderFile.close();
