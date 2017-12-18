@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 project(GLFW_TMP)
-add_executable(GLFW_TMP main.cpp shader.cpp GLAD/src/glad.c)
+add_executable(GLFW_TMP main.cpp shader.cpp GLAD/src/glad.c stb_image.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)
 
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl)
-configure_file(${PROJECT_SOURCE_DIR}/textures/wall.jpg ${CMAKE_BINARY_DIR}/textures/wall.jpg)
+configure_file(${PROJECT_SOURCE_DIR}/textures/container.jpg ${CMAKE_BINARY_DIR}/textures/container.jpg)
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
 
