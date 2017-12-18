@@ -69,24 +69,29 @@ int main(int argc, char ** argv)
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-	//shader.use();
-	//shader.set4Float("offset", 0.5f, 0.0f, 0.0f, 0.0f);
-
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
 
 	GLfloat vertices[] = {
 		// position          // colors          // texture coords
-		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f,  // top right
-		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f,  // bottom right
-		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f,  // bottom left
-		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 1.0f   // top left
+		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.f, 1.f,  // top right
+		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.f, 0.f,  // bottom right
+		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.f, 0.f,  // bottom left
+		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 1.f   // top left
 	};
-	GLuint VBO;
+	GLuint indices[] = {
+		0, 1, 2,
+		0, 2, 3
+	};
+	GLuint VBO, VAO, EBO;
+	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
 	glBindVertexArray(VAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(1);
@@ -94,29 +99,18 @@ int main(int argc, char ** argv)
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
 
-	/*Element Buffer Object (EBO)*/
-	// GLuint indices[] = {
-	// 	0, 1, 2,
-	// 	2, 3, 4
-	// };
-	// GLuint EBO;
-	// glGenBuffers(1, &EBO);
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	// glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	unsigned int textures[2];
+	glGenTextures(2, textures);
 
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	//glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
 	unsigned char *texData = stbi_load("textures/container.jpg", &width, &height, &nrChannels, 0);
-
 	if (texData)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
@@ -128,16 +122,37 @@ int main(int argc, char ** argv)
 	}
 	stbi_image_free(texData);
 
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	texData = stbi_load("textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	if (texData)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cerr << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(texData);
+
+	shader.use();
+	shader.setInt("texture1", 0);
+	shader.setInt("texture2", 1);
+
 	while(!glfwWindowShouldClose(wnd))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		shader.use();
-		double timeValue = glfwGetTime();
-		float greenValue = sin(timeValue) / 2.0f + 0.5f;
-		shader.set4Float("globalColor", 0.0f, greenValue, 0.0f, 1.0f);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-		glBindTexture(GL_TEXTURE_2D, texture);
+		shader.use();
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
