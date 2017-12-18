@@ -7,6 +7,7 @@
 #include "stb_image.h"
 
 GLenum mode = GL_FILL;
+float mixValue = 0.5f;
 
 void error_callback(int error, const char* description)
 {
@@ -29,6 +30,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		else
 			mode = GL_LINE;
 		glPolygonMode(GL_FRONT_AND_BACK, mode);
+	}
+	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+	{
+		mixValue += 0.05;
+		if (mixValue > 1.f)
+			mixValue = 1.f;
+	}
+	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	{
+		mixValue -= 0.05;
+		if (mixValue < 0.f)
+			mixValue = 0.f;
 	}
 }
 
@@ -72,10 +85,10 @@ int main(int argc, char ** argv)
 
 	GLfloat vertices[] = {
 		// position          // colors          // texture coords
-		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.f, 1.f,  // top right
-		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.f, 0.f,  // bottom right
+		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  2.f, 2.f,  // top right
+		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  2.f, 0.f,  // bottom right
 		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.f, 0.f,  // bottom left
-		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 1.f   // top left
+		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 2.f   // top left
 	};
 	GLuint indices[] = {
 		0, 1, 2,
@@ -103,8 +116,8 @@ int main(int argc, char ** argv)
 	glGenTextures(2, textures);
 
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -153,6 +166,7 @@ int main(int argc, char ** argv)
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
 		shader.use();
+		shader.setFloat("mixValue", mixValue);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
