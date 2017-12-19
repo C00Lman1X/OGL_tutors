@@ -159,6 +159,15 @@ int main(int argc, char ** argv)
 	shader.setInt("texture1", 0);
 	shader.setInt("texture2", 1);
 
+	glm::mat4 model(1.f);
+	model = glm::rotate(model, glm::radians(-55.f), glm::vec3(1.f, 0.f, 0.f));
+
+	glm::mat4 view(1.f);
+	view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
+
+	glm::mat4 projection;
+	projection = glm::perspective(glm::radians(45.f), 640.f/480.f, 0.1f, 100.f);
+
 	while(!glfwWindowShouldClose(wnd))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -168,13 +177,11 @@ int main(int argc, char ** argv)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-		glm::mat4 trans(1.f);
-		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.f));
-		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
-
 		shader.use();
 		shader.setFloat("mixValue", mixValue);
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
