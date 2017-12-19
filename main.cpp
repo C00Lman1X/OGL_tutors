@@ -5,9 +5,12 @@
 
 #include "shader.h"
 #include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 GLenum mode = GL_FILL;
-float mixValue = 0.5f;
+float mixValue = 0.2f;
 
 void error_callback(int error, const char* description)
 {
@@ -85,10 +88,10 @@ int main(int argc, char ** argv)
 
 	GLfloat vertices[] = {
 		// position          // colors          // texture coords
-		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  2.f, 2.f,  // top right
-		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  2.f, 0.f,  // bottom right
+		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.f, 1.f,  // top right
+		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.f, 0.f,  // bottom right
 		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.f, 0.f,  // bottom left
-		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 2.f   // top left
+		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 1.f   // top left
 	};
 	GLuint indices[] = {
 		0, 1, 2,
@@ -165,8 +168,13 @@ int main(int argc, char ** argv)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
+		glm::mat4 trans(1.f);
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.f));
+		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
+
 		shader.use();
 		shader.setFloat("mixValue", mixValue);
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

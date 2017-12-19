@@ -5,6 +5,7 @@ add_executable(GLFW_TMP main.cpp shader.cpp GLAD/src/glad.c stb_image.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)
+include_directories(${PROJECT_SOURCE_DIR}/glm-0.9.9-a2)
 
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl COPYONLY)
