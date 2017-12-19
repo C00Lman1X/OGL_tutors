@@ -11,6 +11,7 @@
 
 GLenum mode = GL_FILL;
 float mixValue = 0.2f;
+float pov = 3.f;
 
 void error_callback(int error, const char* description)
 {
@@ -36,15 +37,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
 	{
-		mixValue += 0.05;
-		if (mixValue > 1.f)
-			mixValue = 1.f;
+		pov -= 0.1f;
 	}
 	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
 	{
-		mixValue -= 0.05;
-		if (mixValue < 0.f)
-			mixValue = 0.f;
+		pov += 0.1f;
 	}
 }
 
@@ -83,15 +80,71 @@ int main(int argc, char ** argv)
 
 	glViewport(0, 0, 640, 480);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
+// 	GLfloat vertices[] = {
+// 		// position          // colors          // texture coords
+// 		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.f, 1.f,  // top right
+// 		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.f, 0.f,  // bottom right
+// 		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.f, 0.f,  // bottom left
+// 		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 1.f   // top left
+// 	};
+	glm::vec3 cubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
 	GLfloat vertices[] = {
-		// position          // colors          // texture coords
-		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.f, 1.f,  // top right
-		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.f, 0.f,  // bottom right
-		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.f, 0.f,  // bottom left
-		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 1.f   // top left
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
 	GLuint indices[] = {
 		0, 1, 2,
@@ -109,11 +162,11 @@ int main(int argc, char ** argv)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+//	glEnableVertexAttribArray(2);
+//	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
 
 	unsigned int textures[2];
 	glGenTextures(2, textures);
@@ -159,18 +212,9 @@ int main(int argc, char ** argv)
 	shader.setInt("texture1", 0);
 	shader.setInt("texture2", 1);
 
-	glm::mat4 model(1.f);
-	model = glm::rotate(model, glm::radians(-55.f), glm::vec3(1.f, 0.f, 0.f));
-
-	glm::mat4 view(1.f);
-	view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
-
-	glm::mat4 projection;
-	projection = glm::perspective(glm::radians(45.f), 640.f/480.f, 0.1f, 100.f);
-
 	while(!glfwWindowShouldClose(wnd))
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -179,11 +223,26 @@ int main(int argc, char ** argv)
 
 		shader.use();
 		shader.setFloat("mixValue", mixValue);
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		glm::mat4 view(1.f);
+		view = glm::translate(view, glm::vec3(0.f, 0.f, -pov));
+
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(45.f), 640.f / 480.f, 0.1f, 100.f);
+
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		for(GLuint i = 0; i < 10; i++)
+		{
+			glm::mat4 model(1.f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.f * i;
+			model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.f, 0.3f, 0.5f));
+			model = glm::rotate(model, angle, glm::vec3(1.f, 0.3f, 0.5f));
+			glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
