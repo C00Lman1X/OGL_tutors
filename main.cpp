@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "shader.h"
+#include "camera.h"
 #include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,16 +12,8 @@
 
 GLenum mode = GL_FILL;
 float mixValue = 0.1f;
-float pov = 10.f;
-float fov = 45.f;
-float angle = 0.f;
 float lastX = 320, lastY = 240;
-
-float pitch = 0.f, yaw = -90.f;
-
-glm::vec3 cameraPos   = glm::vec3(0.f, 0.f,  3.f);
-glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
-glm::vec3 cameraUp    = glm::vec3(0.f, 1.f,  0.f);
+Camera camera(glm::vec3(0.f, 0.f, 3.f));
 
 void processInput(GLFWwindow *window, float dt);
 void mouse_callback(GLFWwindow *window, double x, double y);
@@ -47,22 +40,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		else
 			mode = GL_LINE;
 		glPolygonMode(GL_FRONT_AND_BACK, mode);
-	}
-	if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
-	{
-		pov -= 0.1f;
-	}
-	if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
-	{
-		pov += 0.1f;
-	}
-	if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-	{
-		angle -= 3.14f / 50;
-	}
-	if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
-	{
-		angle += 3.14f / 50;
 	}
 }
 
@@ -257,10 +234,10 @@ int main(int argc, char ** argv)
 		shader.use();
 		shader.setFloat("mixValue", mixValue);
 
-		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		glm::mat4 view = camera.GetViewMatrix();
 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(fov), 640.f / 480.f, 0.1f, 100.f);
+		projection = glm::perspective(glm::radians(camera.Zoom), 640.f / 480.f, 0.1f, 100.f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -288,13 +265,13 @@ void processInput(GLFWwindow *window, float dt)
 {
 	float camSpeed = 5.f * dt;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		cameraPos += camSpeed * cameraFront;
+		camera.ProcessKeyboard(Camera_Movement::FORWARD, dt);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		cameraPos -= camSpeed * cameraFront;
+		camera.ProcessKeyboard(Camera_Movement::BACKWARD, dt);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
+		camera.ProcessKeyboard(Camera_Movement::LEFT, dt);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
+		camera.ProcessKeyboard(Camera_Movement::RIGHT, dt);
 }
 
 void mouse_callback(GLFWwindow *window, double x, double y)
@@ -307,38 +284,15 @@ void mouse_callback(GLFWwindow *window, double x, double y)
 		firstMouse = false;
 	}
 
-	float xOffset = x - lastX;
-	float yOffset = lastY - y;
+	float dx = x - lastX;
+	float dy = lastY - y;
 	lastX = x;
 	lastY = y;
-
-	float sensivity = 0.3f;
-	xOffset *= sensivity;
-	yOffset *= sensivity;
-
-	yaw   += xOffset;
-	pitch += yOffset;
-
-	if (pitch > 89.f)
-		pitch = 89.f;
-	if (pitch < -89.f)
-		pitch = -89.f;
-
-	glm::vec3 front;
-	front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-	front.y = sin(glm::radians(pitch));
-	front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-	cameraFront = glm::normalize(front);
-
-	std::cout << pitch << " " << yaw << std::endl;
+	
+	camera.ProcessMouseMovement(dx, dy);
 }
 
 void scroll_callback(GLFWwindow *window, double dx, double dy)
 {
-	if (fov >= 1.f && fov <= 45.f)
-		fov -= dy;
-	if (fov <= 1.f)
-		fov = 1.f;
-	if (fov >= 45.f)
-		fov = 45.f;
+	camera.ProcessMouseScroll(dy);
 }
