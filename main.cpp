@@ -10,8 +10,15 @@
 #include <glm/gtc/type_ptr.hpp>
 
 GLenum mode = GL_FILL;
-float mixValue = 0.2f;
-float pov = 3.f;
+float mixValue = 0.1f;
+float pov = 10.f;
+float angle = 0.f;
+
+glm::vec3 cameraPos   = glm::vec3(0.f, 0.f,  3.f);
+glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
+glm::vec3 cameraUp    = glm::vec3(0.f, 1.f,  0.f);
+
+void processInput(GLFWwindow *window, float dt);
 
 void error_callback(int error, const char* description)
 {
@@ -35,13 +42,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			mode = GL_LINE;
 		glPolygonMode(GL_FRONT_AND_BACK, mode);
 	}
-	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+	if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		pov -= 0.1f;
 	}
-	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		pov += 0.1f;
+	}
+	if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+	{
+		angle -= 3.14f / 50;
+	}
+	if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+	{
+		angle += 3.14f / 50;
 	}
 }
 
@@ -212,8 +227,16 @@ int main(int argc, char ** argv)
 	shader.setInt("texture1", 0);
 	shader.setInt("texture2", 1);
 
+	float dt = 0.f;
+	float lastFrame = 0.f;
+
 	while(!glfwWindowShouldClose(wnd))
 	{
+		float currentFrame = glfwGetTime();
+		dt = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		processInput(wnd, dt);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -224,8 +247,7 @@ int main(int argc, char ** argv)
 		shader.use();
 		shader.setFloat("mixValue", mixValue);
 
-		glm::mat4 view(1.f);
-		view = glm::translate(view, glm::vec3(0.f, 0.f, -pov));
+		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(45.f), 640.f / 480.f, 0.1f, 100.f);
@@ -238,7 +260,7 @@ int main(int argc, char ** argv)
 			glm::mat4 model(1.f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.f * i;
-			model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.f, 0.3f, 0.5f));
+			//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.f, 0.3f, 0.5f));
 			model = glm::rotate(model, angle, glm::vec3(1.f, 0.3f, 0.5f));
 			glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -250,4 +272,17 @@ int main(int argc, char ** argv)
 
 	glfwTerminate();
 	return 0;
+}
+
+void processInput(GLFWwindow *window, float dt)
+{
+	float camSpeed = 2.5f * dt;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		cameraPos += camSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		cameraPos -= camSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
 }
