@@ -86,13 +86,6 @@ int main(int argc, char ** argv)
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-// 	GLfloat vertices[] = {
-// 		// position          // colors          // texture coords
-// 		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.f, 1.f,  // top right
-// 		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.f, 0.f,  // bottom right
-// 		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.f, 0.f,  // bottom left
-// 		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 1.0f,  0.f, 1.f   // top left
-// 	};
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
@@ -106,51 +99,40 @@ int main(int argc, char ** argv)
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 	GLfloat vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		-1,      1.618,  0,     // a 0
+		 1,      1.618,  0 ,    // b 1
+		 0,      1,      1.618, // c 2
+		 0,     -1,      1.618, // d 3
+		 1.618,  0,      1,     // e 4
+		 1.618,  0,     -1,     // f 5
+		 0,      1,     -1.618, // g 6
+		 0,     -1,     -1.618, // h 7
+		 1,     -1.618,  0,     // i 8
+		-1,     -1.618,  0,     // j 9
+		-1.618,  0,      1,     // k 10
+		-1.618,  0,     -1      // l 11
 	};
 	GLuint indices[] = {
-		0, 1, 2,
-		0, 2, 3
+		0, 1, 2,  //abc
+		0, 1, 6,  //abg
+		1, 2, 4,  //bce
+		1, 4, 5,  //bef
+		1, 5, 6,  //bfg
+		0, 6, 11, //agl
+		0, 10,11, //akl
+		0, 10,2,  //akc
+		2, 10,3,  //ckd
+		2, 3, 4,  //cde
+		6, 11,7,  //glh
+		6, 7, 5,  //ghf
+		3, 10,9,  //dkj
+		9, 10,11, //jkl
+		9, 11,7,  //jlh
+		3, 9, 8,  //dji
+		9, 8, 7,  //jih
+		3, 4, 8,  //dei
+		4, 8, 5,  //eif
+		8, 5, 7,  //ifh
 	};
 	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
@@ -164,9 +146,9 @@ int main(int argc, char ** argv)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+//	glEnableVertexAttribArray(1);
+//	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
 //	glEnableVertexAttribArray(2);
 //	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
 
@@ -249,8 +231,10 @@ int main(int argc, char ** argv)
 			float angle = 20.f * i;
 			//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.f, 0.3f, 0.5f));
 			model = glm::rotate(model, angle, glm::vec3(1.f, 0.3f, 0.5f));
+			model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
 			glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawElements(GL_TRIANGLES, 60, GL_UNSIGNED_INT, 0);
 		}
 
 		glfwSwapBuffers(wnd);
@@ -272,6 +256,10 @@ void processInput(GLFWwindow *window, float dt)
 		camera.ProcessKeyboard(Camera_Movement::LEFT, dt);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(Camera_Movement::RIGHT, dt);
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::UP, dt);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::DOWN, dt);
 }
 
 void mouse_callback(GLFWwindow *window, double x, double y)
