@@ -11,7 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 GLenum mode = GL_FILL;
-float mixValue = 0.1f;
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 float lastX = 320, lastY = 240;
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
 
@@ -85,19 +85,8 @@ int main(int argc, char ** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+	Shader lampShader("shaders/vertex.glsl", "shaders/fragment_lamp.glsl");
 
-	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
 	GLfloat vertices[] = {
 		-1,      1.618,  0,     // a 0
 		 1,      1.618,  0 ,    // b 1
@@ -140,65 +129,23 @@ int main(int argc, char ** argv)
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
-
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
-//	glEnableVertexAttribArray(1);
-//	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
-//	glEnableVertexAttribArray(2);
-//	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
 
-	unsigned int textures[2];
-	glGenTextures(2, textures);
-
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char *texData = stbi_load("textures/container.jpg", &width, &height, &nrChannels, 0);
-	if (texData)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cerr << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(texData);
-
-	glBindTexture(GL_TEXTURE_2D, textures[1]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	texData = stbi_load("textures/awesomeface.png", &width, &height, &nrChannels, 0);
-	if (texData)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cerr << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(texData);
-
-	shader.use();
-	shader.setInt("texture1", 0);
-	shader.setInt("texture2", 1);
+	GLuint lightVAO;
+	glGenVertexArrays(1, &lightVAO);
+	glBindVertexArray(lightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
+	glEnableVertexAttribArray(0);
 
 	float dt = 0.f;
 	float lastFrame = 0.f;
-
 	while(!glfwWindowShouldClose(wnd))
 	{
 		float currentFrame = glfwGetTime();
@@ -208,13 +155,9 @@ int main(int argc, char ** argv)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textures[0]);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, textures[1]);
-
 		shader.use();
-		shader.setFloat("mixValue", mixValue);
+		shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+		shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		glm::mat4 view = camera.GetViewMatrix();
 
@@ -224,18 +167,21 @@ int main(int argc, char ** argv)
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glBindVertexArray(VAO);
-		for(GLuint i = 0; i < 10; i++)
-		{
-			glm::mat4 model(1.f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.f * i;
-			//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.f, 0.3f, 0.5f));
-			model = glm::rotate(model, angle, glm::vec3(1.f, 0.3f, 0.5f));
-			model = glm::scale(model, glm::vec3(0.3, 0.3, 0.3));
-			glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			//glDrawArrays(GL_TRIANGLES, 0, 36);
-			glDrawElements(GL_TRIANGLES, 60, GL_UNSIGNED_INT, 0);
-		}
+		glm::mat4 model(1.f);
+		model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawElements(GL_TRIANGLES, 60, GL_UNSIGNED_INT, 0);
+
+		lampShader.use();
+		glUniformMatrix4fv(glGetUniformLocation(lampShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(lampShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(lampShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		model = glm::mat4(1.f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		glBindVertexArray(lightVAO);
+		glDrawElements(GL_TRIANGLES, 60, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();

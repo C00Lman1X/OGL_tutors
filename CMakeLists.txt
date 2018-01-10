@@ -9,6 +9,7 @@ include_directories(${PROJECT_SOURCE_DIR}/glm-0.9.9-a2)
 
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment_lamp.glsl ${CMAKE_BINARY_DIR}/shaders/fragment_lamp.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/container.jpg ${CMAKE_BINARY_DIR}/textures/container.jpg COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/awesomeface.png ${CMAKE_BINARY_DIR}/textures/awesomeface.png COPYONLY)
 
