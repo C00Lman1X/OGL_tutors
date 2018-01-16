@@ -7,7 +7,7 @@
 
 #include <vector>
 
-enum class Camera_Movement
+enum Camera_Movement
 {
     FORWARD,
     BACKWARD,

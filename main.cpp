@@ -12,6 +12,7 @@
 
 GLenum mode = GL_FILL;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 objectPos(0.0f, 0.0f, 0.0f);
 float lastX = 320, lastY = 240;
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
 
@@ -85,29 +86,69 @@ int main(int argc, char ** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-	Shader lampShader("shaders/vertex.glsl", "shaders/fragment_lamp.glsl");
+	Shader lampShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 
 	GLfloat vertices[] = {
-		-1, 1.618, 0,	1, 1.618, 0, 	0, 1, 1.618,	//abc
-		-1, 1.618, 0,	1, 1.618, 0, 	0, 1, -1.618,	//abg
-		1, 1.618, 0,	0, 1, 1.618, 	1.618, 0, 1,	//bce
-		1, 1.618, 0,	1.618, 0, 1, 	1.618, 0, -1,	//bef
-		1, 1.618, 0,	1.618, 0, -1, 	0, 1, -1.618,	//bfg
-		-1, 1.618, 0,	0, 1, -1.618, 	-1.618, 0, -1,  //agl
-		-1, 1.618, 0, 	-1.618, 0, 1, 	-1.618, 0, -1,  //akl
-		-1, 1.618, 0, 	-1.618, 0, 1, 	0, 1, 1.618,	//akc
-		0, 1, 1.618, 	-1.618, 0, 1, 	0, -1, 1.618,	//ckd
-		0, 1, 1.618, 	0, -1, 1.618, 	1.618, 0, 1,	//cde
-		0, 1, -1.618, 	-1.618, 0, -1, 	0, -1, -1.618,  //glh
-		0, 1, -1.618, 	0, -1, -1.618, 	1.618, 0, -1,   //ghf
-		0, -1, 1.618, 	-1.618, 0, 1, 	-1, -1.618, 0,  //dkj
-		-1, -1.618, 0, 	-1.618, 0, 1, 	-1.618, 0, -1,  //jkl
-		-1, -1.618, 0, 	-1.618, 0, -1, 	0, -1, -1.618,  //jlh
-		0, -1, 1.618, 	-1, -1.618, 0, 	1, -1.618, 0,   //dji
-		-1, -1.618, 0, 	1, -1.618, 0, 	0, -1, -1.618,  //jih
-		0, -1, 1.618, 	1.618, 0, 1, 	1, -1.618, 0,	//dei
-		1.618, 0, 1, 	1, -1.618, 0, 	1.618, 0, -1,	//eif
-		1, -1.618, 0, 	1.618, 0, -1, 	0, -1, -1.618,  //ifh
+		-1, 1.618, 0, 	0.f, 3.236f, 1.236f,
+		1, 1.618, 0, 	0.f, 3.236f, 1.236f,
+		0, 1, 1.618, 	0.f, 3.236f, 1.236f,//abc
+		-1, 1.618, 0, 	0.f, 3.236f, -1.236f,
+		1, 1.618, 0, 	0.f, 3.236f, -1.236f,
+		0, 1, -1.618, 	0.f, 3.236f, -1.236f, //abg
+		1, 1.618, 0, 	3.618f, 3.236f, 0.f,
+		0, 1, 1.618, 	3.618f, 3.236f, 0.f,
+		1.618, 0, 1, 	3.618f, 3.236f, 0.f, //bce
+		1, 1.618, 0, 	4.236f, 5.236f, 0.f,
+		1.618, 0, 1, 	4.236f, 5.236f, 0.f,
+		1.618, 0, -1, 	4.236f, 5.236f, 0.f, //bef
+		1, 1.618, 0, 	0.382f, 3.236f, 0.f,
+		1.618, 0, -1, 	0.382f, 3.236f, 0.f,
+		0, 1, -1.618, 	0.382f, 3.236f, 0.f, //bfg
+		-1, 1.618, 0, 	-1.618f, 3.236f, 0.f,
+		0, 1, -1.618, 	-1.618f, 3.236f, 0.f,
+		-1.618, 0, -1, 	-1.618f, 3.236f, 0.f, //agl
+		-1, 1.618, 0, 	4.236f, -5.236, 0.f,
+		-1.618, 0, 1, 	4.236f, -5.236, 0.f,
+		-1.618, 0, -1, 	4.236f, -5.236, 0.f, //akl
+		-1, 1.618, 0, 	1.618f, 3.236f, 0.f,
+		-1.618, 0, 1, 	1.618f, 3.236f, 0.f,
+		0, 1, 1.618, 	1.618f, 3.236f, 0.f, //akc
+		0, 1, 1.618, 	0.764f, 0.f, 3.236f,
+		-1.618, 0, 1, 	0.764f, 0.f, 3.236f,
+		0, -1, 1.618, 	0.764f, 0.f, 3.236f, //ckd
+		0, 1, 1.618, 	2.f, 0.f, 3.236f,
+		0, -1, 1.618, 	2.f, 0.f, 3.236f,
+		1.618, 0, 1, 	2.f, 0.f, 3.236f,	 //cde
+		0, 1, -1.618, 	3.236f, 0.f, 3.236f,
+		-1.618, 0, -1, 	3.236f, 0.f, 3.236f,
+		0, -1, -1.618, 	3.236f, 0.f, 3.236f, //glh
+		0, 1, -1.618, 	2.f, 0.f, 3.236f,
+		0, -1, -1.618, 	2.f, 0.f, 3.236f,
+		1.618, 0, -1,	 2.f, 0.f, 3.236f,	 //ghf
+		0, -1, 1.618, 	-1.f, -2.f, 2.f,
+		-1.618, 0, 1, 	-1.f, -2.f, 2.f,
+		-1, -1.618, 0, 	-1.f, -2.f, 2.f,	 //dkj
+		-1, -1.618, 0, 	1.f, -1.236f, 0.f,
+		-1.618, 0, 1, 	1.f, -1.236f, 0.f,
+		-1.618, 0, -1, 	1.f, -1.236f, 0.f,	 //jkl
+		-1, -1.618, 0, 	1.618f, -2.f, -2.f,
+		-1.618, 0, -1, 	1.618f, -2.f, -2.f,
+		0, -1, -1.618, 	1.618f, -2.f, -2.f,	 //jlh
+		0, -1, 1.618, 	-0.618f, -3.236f, 1.236f,
+		-1, -1.618, 0, 	-0.618f, -3.236f, 1.236f,
+		1, -1.618, 0, 	-0.618f, -3.236f, 1.236f, //dji
+		-1, -1.618, 0, 	0.f, 3.236f, 1.236f,
+		1, -1.618, 0, 	0.f, 3.236f, 1.236f,
+		0, -1, -1.618, 	0.f, 3.236f, 1.236f, //jih
+		0, -1, 1.618, 	-1.f, 2.f, -2.f,
+		1.618, 0, 1, 	-1.f, 2.f, -2.f,
+		1, -1.618, 0, 	-1.f, 2.f, -2.f,	 //dei
+		1.618, 0, 1, 	0.f, -1.236f, 0.f,
+		1, -1.618, 0, 	0.f, -1.236f, 0.f,
+		1.618, 0, -1, 	0.f, -1.236f, 0.f,	 //eif
+		1, -1.618, 0, 	1.618f, 2.f, 2.f,
+		1.618, 0, -1, 	1.618f, 2.f, 2.f,
+		0, -1, -1.618, 	1.618f, 2.f, 2.f	 //ifh
 	};
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -117,13 +158,15 @@ int main(int argc, char ** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)3);
 
 	GLuint lightVAO;
 	glGenVertexArrays(1, &lightVAO);
 	glBindVertexArray(lightVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(0);
 
 	float dt = 0.f;
@@ -140,6 +183,7 @@ int main(int argc, char ** argv)
 		shader.use();
 		shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 		shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		shader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
 
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 640.f / 480.f, 0.1f, 100.f);
@@ -147,6 +191,7 @@ int main(int argc, char ** argv)
 		shader.setMat4("projection", projection);
 
 		glm::mat4 model(1.f);
+		model = glm::translate(model, objectPos);
 		model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
 		shader.setMat4("model", model);
 		
@@ -173,7 +218,6 @@ int main(int argc, char ** argv)
 
 void processInput(GLFWwindow *window, float dt)
 {
-	float camSpeed = 5.f * dt;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera.ProcessKeyboard(Camera_Movement::FORWARD, dt);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -186,6 +230,16 @@ void processInput(GLFWwindow *window, float dt)
 		camera.ProcessKeyboard(Camera_Movement::UP, dt);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(Camera_Movement::DOWN, dt);
+
+	float speed = 5.f;
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		objectPos.z -= speed * dt;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		objectPos.z += speed * dt;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		objectPos.x += speed * dt;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		objectPos.x -= speed * dt;
 }
 
 void mouse_callback(GLFWwindow *window, double x, double y)
