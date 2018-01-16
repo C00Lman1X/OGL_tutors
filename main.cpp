@@ -14,6 +14,7 @@ GLenum mode = GL_FILL;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 glm::vec3 objectPos(0.0f, 0.0f, 0.0f);
 float lastX = 320, lastY = 240;
+bool drawLight = true;
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
 
 void processInput(GLFWwindow *window, float dt);
@@ -42,6 +43,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			mode = GL_LINE;
 		glPolygonMode(GL_FRONT_AND_BACK, mode);
 	}
+	if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS)
+		camera.Position = lightPos;
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+		drawLight = !drawLight;
 }
 
 int main(int argc, char ** argv)
@@ -89,66 +94,66 @@ int main(int argc, char ** argv)
 	Shader lampShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 
 	GLfloat vertices[] = {
-		-1, 1.618, 0, 	0.f, 3.236f, 1.236f,
-		1, 1.618, 0, 	0.f, 3.236f, 1.236f,
-		0, 1, 1.618, 	0.f, 3.236f, 1.236f,//abc
-		-1, 1.618, 0, 	0.f, 3.236f, -1.236f,
-		1, 1.618, 0, 	0.f, 3.236f, -1.236f,
-		0, 1, -1.618, 	0.f, 3.236f, -1.236f, //abg
-		1, 1.618, 0, 	3.618f, 3.236f, 0.f,
-		0, 1, 1.618, 	3.618f, 3.236f, 0.f,
-		1.618, 0, 1, 	3.618f, 3.236f, 0.f, //bce
-		1, 1.618, 0, 	4.236f, 5.236f, 0.f,
-		1.618, 0, 1, 	4.236f, 5.236f, 0.f,
-		1.618, 0, -1, 	4.236f, 5.236f, 0.f, //bef
-		1, 1.618, 0, 	0.382f, 3.236f, 0.f,
-		1.618, 0, -1, 	0.382f, 3.236f, 0.f,
-		0, 1, -1.618, 	0.382f, 3.236f, 0.f, //bfg
-		-1, 1.618, 0, 	-1.618f, 3.236f, 0.f,
-		0, 1, -1.618, 	-1.618f, 3.236f, 0.f,
-		-1.618, 0, -1, 	-1.618f, 3.236f, 0.f, //agl
-		-1, 1.618, 0, 	4.236f, -5.236, 0.f,
-		-1.618, 0, 1, 	4.236f, -5.236, 0.f,
-		-1.618, 0, -1, 	4.236f, -5.236, 0.f, //akl
-		-1, 1.618, 0, 	1.618f, 3.236f, 0.f,
-		-1.618, 0, 1, 	1.618f, 3.236f, 0.f,
-		0, 1, 1.618, 	1.618f, 3.236f, 0.f, //akc
-		0, 1, 1.618, 	0.764f, 0.f, 3.236f,
-		-1.618, 0, 1, 	0.764f, 0.f, 3.236f,
-		0, -1, 1.618, 	0.764f, 0.f, 3.236f, //ckd
-		0, 1, 1.618, 	2.f, 0.f, 3.236f,
-		0, -1, 1.618, 	2.f, 0.f, 3.236f,
-		1.618, 0, 1, 	2.f, 0.f, 3.236f,	 //cde
-		0, 1, -1.618, 	3.236f, 0.f, 3.236f,
-		-1.618, 0, -1, 	3.236f, 0.f, 3.236f,
-		0, -1, -1.618, 	3.236f, 0.f, 3.236f, //glh
-		0, 1, -1.618, 	2.f, 0.f, 3.236f,
-		0, -1, -1.618, 	2.f, 0.f, 3.236f,
-		1.618, 0, -1,	 2.f, 0.f, 3.236f,	 //ghf
-		0, -1, 1.618, 	-1.f, -2.f, 2.f,
-		-1.618, 0, 1, 	-1.f, -2.f, 2.f,
-		-1, -1.618, 0, 	-1.f, -2.f, 2.f,	 //dkj
-		-1, -1.618, 0, 	1.f, -1.236f, 0.f,
-		-1.618, 0, 1, 	1.f, -1.236f, 0.f,
-		-1.618, 0, -1, 	1.f, -1.236f, 0.f,	 //jkl
-		-1, -1.618, 0, 	1.618f, -2.f, -2.f,
-		-1.618, 0, -1, 	1.618f, -2.f, -2.f,
-		0, -1, -1.618, 	1.618f, -2.f, -2.f,	 //jlh
-		0, -1, 1.618, 	-0.618f, -3.236f, 1.236f,
-		-1, -1.618, 0, 	-0.618f, -3.236f, 1.236f,
-		1, -1.618, 0, 	-0.618f, -3.236f, 1.236f, //dji
-		-1, -1.618, 0, 	0.f, 3.236f, 1.236f,
-		1, -1.618, 0, 	0.f, 3.236f, 1.236f,
-		0, -1, -1.618, 	0.f, 3.236f, 1.236f, //jih
-		0, -1, 1.618, 	-1.f, 2.f, -2.f,
-		1.618, 0, 1, 	-1.f, 2.f, -2.f,
-		1, -1.618, 0, 	-1.f, 2.f, -2.f,	 //dei
-		1.618, 0, 1, 	0.f, -1.236f, 0.f,
-		1, -1.618, 0, 	0.f, -1.236f, 0.f,
-		1.618, 0, -1, 	0.f, -1.236f, 0.f,	 //eif
-		1, -1.618, 0, 	1.618f, 2.f, 2.f,
-		1.618, 0, -1, 	1.618f, 2.f, 2.f,
-		0, -1, -1.618, 	1.618f, 2.f, 2.f	 //ifh
+		-1, 1.618, 0, 	0.f, 3.236f, 1.236f,	1.f,
+		1, 1.618, 0, 	0.f, 3.236f, 1.236f,	1.f,
+		0, 1, 1.618, 	0.f, 3.236f, 1.236f,	1.f,//abc
+		-1, 1.618, 0, 	0.f, 3.236f, -1.236f,	2.f,
+		1, 1.618, 0, 	0.f, 3.236f, -1.236f,	2.f,
+		0, 1, -1.618, 	0.f, 3.236f, -1.236f,	2.f, //abg
+		1, 1.618, 0, 	2.f, 2.f, 2.f,			3.f,
+		0, 1, 1.618, 	2.f, 2.f, 2.f,			3.f,
+		1.618, 0, 1, 	2.f, 2.f, 2.f,			3.f, //bce
+		1, 1.618, 0, 	3.236f, 1.236f, 0.f,	4.f,
+		1.618, 0, 1, 	3.236f, 1.236f, 0.f,	4.f,
+		1.618, 0, -1, 	3.236f, 1.236f, 0.f,	4.f, //bef
+		1, 1.618, 0, 	2.f, 2.f, -2.f,			5.f,
+		1.618, 0, -1, 	2.f, 2.f, -2.f,			5.f,
+		0, 1, -1.618, 	2.f, 2.f, -2.f,			5.f, //bfg
+		-1, 1.618, 0, 	-2.f, 2.f, -2.f,		6.f,
+		0, 1, -1.618, 	-2.f, 2.f, -2.f,		6.f,
+		-1.618, 0, -1, 	-2.f, 2.f, -2.f,		6.f, //agl
+		-1, 1.618, 0, 	-3.236f, 1.236f, 0.f,	7.f,
+		-1.618, 0, 1, 	-3.236f, 1.236f, 0.f,	7.f,
+		-1.618, 0, -1, 	-3.236f, 1.236f, 0.f,	7.f, //akl
+		-1, 1.618, 0, 	-2.f, 2.f, 2.f,			8.f,
+		-1.618, 0, 1, 	-2.f, 2.f, 2.f,			8.f,
+		0, 1, 1.618, 	-2.f, 2.f, 2.f,			8.f, //akc
+		0, 1, 1.618, 	-1.236f, 0.f, 3.236f,	9.f,
+		-1.618, 0, 1, 	-1.236f, 0.f, 3.236f,	9.f,
+		0, -1, 1.618, 	-1.236f, 0.f, 3.236f,	9.f, //ckd
+		0, 1, 1.618, 	1.236f, 0.f, 3.236f,	10.f,
+		0, -1, 1.618, 	1.236f, 0.f, 3.236f,	10.f,
+		1.618, 0, 1, 	1.236f, 0.f, 3.236f,	10.f, //cde
+		0, 1, -1.618, 	-1.236f, 0.f, -3.236f,	11.f,
+		-1.618, 0, -1, 	-1.236f, 0.f, -3.236f,	11.f,
+		0, -1, -1.618, 	-1.236f, 0.f, -3.236f,	11.f, //glh
+		0, 1, -1.618, 	1.236f, 0.f, -3.236f,	12.f,
+		0, -1, -1.618, 	1.236f, 0.f, -3.236f,	12.f,
+		1.618, 0, -1,	1.236f, 0.f, -3.236f,	12.f, //ghf
+		0, -1, 1.618, 	-2.f, -2.f, 2.f,		13.f,
+		-1.618, 0, 1, 	-2.f, -2.f, 2.f,		13.f,
+		-1, -1.618, 0, 	-2.f, -2.f, 2.f,		13.f, //dkj
+		-1, -1.618, 0, 	-3.236f, -1.236f, 0.f,	14.f,
+		-1.618, 0, 1, 	-3.236f, -1.236f, 0.f,	14.f,
+		-1.618, 0, -1, 	-3.236f, -1.236f, 0.f,	14.f, //jkl
+		-1, -1.618, 0, 	-2.f, -2.f, -2.f,		15.f,
+		-1.618, 0, -1, 	-2.f, -2.f, -2.f,		15.f,
+		0, -1, -1.618, 	-2.f, -2.f, -2.f,		15.f, //jlh
+		0, -1, 1.618, 	0.f, -3.236f, 1.236f,	16.f,
+		-1, -1.618, 0, 	0.f, -3.236f, 1.236f,	16.f,
+		1, -1.618, 0, 	0.f, -3.236f, 1.236f,	16.f, //dji
+		-1, -1.618, 0, 	0.f, -3.236f, -1.236f,	17.f,
+		1, -1.618, 0, 	0.f, -3.236f, -1.236f,	17.f,
+		0, -1, -1.618, 	0.f, -3.236f, -1.236f,	17.f, //jih
+		0, -1, 1.618, 	2.f, -2.f, 2.f,			18.f,
+		1.618, 0, 1, 	2.f, -2.f, 2.f,			18.f,
+		1, -1.618, 0, 	2.f, -2.f, 2.f,			18.f, //dei
+		1.618, 0, 1, 	3.236f, -1.236f, 0.f,	19.f,
+		1, -1.618, 0, 	3.236f, -1.236f, 0.f,	19.f,
+		1.618, 0, -1, 	3.236f, -1.236f, 0.f,	19.f, //eif
+		1, -1.618, 0, 	2.f, -2.f, -2.f,		20.f,
+		1.618, 0, -1, 	2.f, -2.f, -2.f,		20.f,
+		0, -1, -1.618, 	2.f, -2.f, -2.f,		20.f //ifh
 	};
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -158,15 +163,17 @@ int main(int argc, char ** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)3);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid *)(6 * sizeof(GLfloat)));
 
 	GLuint lightVAO;
 	glGenVertexArrays(1, &lightVAO);
 	glBindVertexArray(lightVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid *)0);
 	glEnableVertexAttribArray(0);
 
 	float dt = 0.f;
@@ -184,6 +191,7 @@ int main(int argc, char ** argv)
 		shader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 		shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 		shader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+		shader.setVec3("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
 
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 640.f / 480.f, 0.1f, 100.f);
@@ -198,15 +206,18 @@ int main(int argc, char ** argv)
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 60);
 
-		lampShader.use();
-		lampShader.setMat4("view", view);
-		lampShader.setMat4("projection", projection);
-		model = glm::mat4(1.f);
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.2f));
-		lampShader.setMat4("model", model);
-		glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 60);
+		if (drawLight)
+		{
+			lampShader.use();
+			lampShader.setMat4("view", view);
+			lampShader.setMat4("projection", projection);
+			model = glm::mat4(1.f);
+			model = glm::translate(model, lightPos);
+			model = glm::scale(model, glm::vec3(0.2f));
+			lampShader.setMat4("model", model);
+			glBindVertexArray(lightVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 60);
+		}
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
@@ -231,7 +242,7 @@ void processInput(GLFWwindow *window, float dt)
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(Camera_Movement::DOWN, dt);
 
-	float speed = 5.f;
+	float speed = 4.f;
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		objectPos.z -= speed * dt;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
