@@ -12,6 +12,8 @@ configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex_lamp.glsl ${CMAKE_BINARY_DIR
 configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/fragment_lamp.glsl ${CMAKE_BINARY_DIR}/shaders/fragment_lamp.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/container.jpg ${CMAKE_BINARY_DIR}/textures/container.jpg COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/textures/container2.png ${CMAKE_BINARY_DIR}/textures/container2.png COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/textures/container2_specular.png ${CMAKE_BINARY_DIR}/textures/container2_specular.png COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/awesomeface.png ${CMAKE_BINARY_DIR}/textures/awesomeface.png COPYONLY)
 
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
