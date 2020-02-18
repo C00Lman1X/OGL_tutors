@@ -16,6 +16,8 @@ configure_file(${PROJECT_SOURCE_DIR}/textures/container2.png ${CMAKE_BINARY_DIR}
 configure_file(${PROJECT_SOURCE_DIR}/textures/container2_specular.png ${CMAKE_BINARY_DIR}/textures/container2_specular.png COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/awesomeface.png ${CMAKE_BINARY_DIR}/textures/awesomeface.png COPYONLY)
 
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
+
 if(WIN32)
     message("WIN32!")
     find_library(GLFW_LIB_DEBUG glfw3 HINTS ${PROJECT_SOURCE_DIR}/glfw/build/src/Debug)
@@ -26,6 +28,11 @@ if(WIN32)
 else()
     message("Unix!")
     find_library(GLFW_LIB glfw3 HINTS ${PROJECT_SOURCE_DIR}/glfw/build/src)
-    find_library(OGL_LIB GL /usr/lib/x86_64-linux-gnu)
-    target_link_libraries(GLFW_TMP ${GLFW_LIB} ${OGL_LIB} dl X11 Xrandr Xi Xxf86vm Xinerama Xcursor pthread)
+    find_library(OGL_LIB OpenGL)
+    find_library(CORE_VIDEO_LIB CoreVideo)
+    find_library(IOKIT_LIB IOKit)
+    find_library(COCOA_LIB Cocoa)
+    find_library(CARBON_LIB Carbon)
+    target_link_libraries(GLFW_TMP ${GLFW_LIB} ${OGL_LIB} ${CORE_VIDEO_LIB} ${IOKIT_LIB} ${COCOA_LIB} ${CARBON_LIB})# dl X11 Xrandr Xi Xxf86vm Xinerama Xcursor pthread)
+
 endif()
