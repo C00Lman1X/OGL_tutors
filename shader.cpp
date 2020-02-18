@@ -14,11 +14,11 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
     {
         vShaderFile.open(vertexPath);
 		vShaderFile.seekg(0, vShaderFile.end);
-		int vertexLength = vShaderFile.tellg();
+		std::streampos vertexLength = vShaderFile.tellg();
 		vShaderFile.seekg(0, vShaderFile.beg);
 		fShaderFile.open(fragmentPath);
 		fShaderFile.seekg(0, fShaderFile.end);
-		int fragmentLength = fShaderFile.tellg();
+		std::streampos fragmentLength = fShaderFile.tellg();
 		fShaderFile.seekg(0, fShaderFile.beg);
 
         vShaderFile.read(vShaderCode, vertexLength);
@@ -106,6 +106,11 @@ void Shader::set4Float(const std::string &name, float f1, float f2, float f3, fl
 void Shader::setVec3(const std::string &name, float x, float y, float z) const
 {
     glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+}
+
+void Shader::setVec3(const std::string &name, const glm::vec3 &vec) const
+{
+    glUniform3f(glGetUniformLocation(ID, name.c_str()), vec.x, vec.y, vec.z);
 }
 
 void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const

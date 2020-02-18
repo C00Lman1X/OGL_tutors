@@ -13,12 +13,13 @@
 GLenum mode = GL_FILL;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 glm::vec3 objectPos(0.f, 0.f, 0.f);
-float lastX = 320, lastY = 240;
+double lastX = 320.0, lastY = 240.0;
 bool drawLight = true;
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
 
 void processInput(GLFWwindow *window, float dt);
 void mouse_callback(GLFWwindow *window, double x, double y);
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double dx, double dy);
 GLuint loadTexture(const char *path);
 
@@ -76,6 +77,7 @@ int main(int argc, char ** argv)
 	glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
 	glfwSetCursorPosCallback(wnd, mouse_callback);
 	glfwSetScrollCallback(wnd, scroll_callback);
+	glfwSetMouseButtonCallback(wnd, mouse_button_callback);
 
 	glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -116,85 +118,85 @@ int main(int argc, char ** argv)
 
 	GLfloat vertices[] = {
 		//abc
-		-1, 1.618, 0, 	0.f, 3.236f, 1.236f,	0.f, 0.f,
-		1, 1.618, 0, 	0.f, 3.236f, 1.236f,	0.f, 1.f,
-		0, 1, 1.618, 	0.f, 3.236f, 1.236f,	1.f, 0.f,
+		-1.f, 1.618f, 0.f, 	0.f, 3.236f, 1.236f,	0.f, 0.f,
+		1.f, 1.618f, 0.f, 	0.f, 3.236f, 1.236f,	0.f, 1.f,
+		0.f, 1.f, 1.618f, 	0.f, 3.236f, 1.236f,	1.f, 0.f,
 		//abg
-		-1, 1.618, 0, 	0.f, 3.236f, -1.236f,	0.f, 0.f,
-		1, 1.618, 0, 	0.f, 3.236f, -1.236f,	0.f, 1.f,
-		0, 1, -1.618, 	0.f, 3.236f, -1.236f,	1.f, 0.f,
+		-1.f, 1.618f, 0.f, 	0.f, 3.236f, -1.236f,	0.f, 0.f,
+		1.f, 1.618f, 0.f, 	0.f, 3.236f, -1.236f,	0.f, 1.f,
+		0.f, 1.f, -1.618f, 	0.f, 3.236f, -1.236f,	1.f, 0.f,
 		//bce
-		1, 1.618, 0, 	2.f, 2.f, 2.f,			0.f, 0.f,
-		0, 1, 1.618, 	2.f, 2.f, 2.f,			0.f, 1.f,
-		1.618, 0, 1, 	2.f, 2.f, 2.f,			1.f, 0.f,
+		1.f, 1.618f, 0.f, 	2.f, 2.f, 2.f,			0.f, 0.f,
+		0.f, 1.f, 1.618f, 	2.f, 2.f, 2.f,			0.f, 1.f,
+		1.618f, 0.f, 1.f, 	2.f, 2.f, 2.f,			1.f, 0.f,
 		//bef
-		1, 1.618, 0, 	3.236f, 1.236f, 0.f,	0.f, 0.f,
-		1.618, 0, 1, 	3.236f, 1.236f, 0.f,	0.f, 1.f,
-		1.618, 0, -1, 	3.236f, 1.236f, 0.f,	1.f, 0.f,
+		1.f, 1.618f, 0.f, 	3.236f, 1.236f, 0.f,	0.f, 0.f,
+		1.618f, 0.f, 1.f, 	3.236f, 1.236f, 0.f,	0.f, 1.f,
+		1.618f, 0.f, -1.f, 	3.236f, 1.236f, 0.f,	1.f, 0.f,
 		//bfg
-		1, 1.618, 0, 	2.f, 2.f, -2.f,			0.f, 0.f,
-		1.618, 0, -1, 	2.f, 2.f, -2.f,			0.f, 1.f,
-		0, 1, -1.618, 	2.f, 2.f, -2.f,			1.f, 0.f,
+		1.f, 1.618f, 0.f, 	2.f, 2.f, -2.f,			0.f, 0.f,
+		1.618f, 0.f, -1.f, 	2.f, 2.f, -2.f,			0.f, 1.f,
+		0.f, 1.f, -1.618f, 	2.f, 2.f, -2.f,			1.f, 0.f,
 		//agl
-		-1, 1.618, 0, 	-2.f, 2.f, -2.f,		0.f, 0.f,
-		0, 1, -1.618, 	-2.f, 2.f, -2.f,		0.f, 1.f,
-		-1.618, 0, -1, 	-2.f, 2.f, -2.f,		1.f, 0.f,
+		-1.f, 1.618f, 0.f, 	-2.f, 2.f, -2.f,		0.f, 0.f,
+		0.f, 1.f, -1.618f, 	-2.f, 2.f, -2.f,		0.f, 1.f,
+		-1.618f, 0.f, -1.f, -2.f, 2.f, -2.f,		1.f, 0.f,
 		//akl
-		-1, 1.618, 0, 	-3.236f, 1.236f, 0.f,	0.f, 0.f,
-		-1.618, 0, 1, 	-3.236f, 1.236f, 0.f,	0.f, 1.f,
-		-1.618, 0, -1, 	-3.236f, 1.236f, 0.f,	1.f, 0.f,
+		-1.f, 1.618f, 0.f, 	-3.236f, 1.236f, 0.f,	0.f, 0.f,
+		-1.618f, 0.f, 1.f, 	-3.236f, 1.236f, 0.f,	0.f, 1.f,
+		-1.618f, 0.f, -1.f, -3.236f, 1.236f, 0.f,	1.f, 0.f,
 		//akc
-		-1, 1.618, 0, 	-2.f, 2.f, 2.f,			0.f, 0.f,
-		-1.618, 0, 1, 	-2.f, 2.f, 2.f,			0.f, 1.f,
-		0, 1, 1.618, 	-2.f, 2.f, 2.f,			1.f, 0.f,
+		-1.f, 1.618f, 0.f, 	-2.f, 2.f, 2.f,			0.f, 0.f,
+		-1.618f, 0.f, 1.f, 	-2.f, 2.f, 2.f,			0.f, 1.f,
+		0.f, 1.f, 1.618f, 	-2.f, 2.f, 2.f,			1.f, 0.f,
 		//ckd
-		0, 1, 1.618, 	-1.236f, 0.f, 3.236f,	0.f, 0.f,
-		-1.618, 0, 1, 	-1.236f, 0.f, 3.236f,	0.f, 1.f,
-		0, -1, 1.618, 	-1.236f, 0.f, 3.236f,	1.f, 0.f,
+		0.f, 1.f, 1.618f, 	-1.236f, 0.f, 3.236f,	0.f, 0.f,
+		-1.618f, 0.f, 1.f, 	-1.236f, 0.f, 3.236f,	0.f, 1.f,
+		0.f, -1.f, 1.618f, 	-1.236f, 0.f, 3.236f,	1.f, 0.f,
 		//cde
-		0, 1, 1.618, 	1.236f, 0.f, 3.236f,	0.f, 0.f,
-		0, -1, 1.618, 	1.236f, 0.f, 3.236f,	0.f, 1.f,
-		1.618, 0, 1, 	1.236f, 0.f, 3.236f,	1.f, 0.f,
+		0.f, 1.f, 1.618f, 	1.236f, 0.f, 3.236f,	0.f, 0.f,
+		0.f, -1.f, 1.618f, 	1.236f, 0.f, 3.236f,	0.f, 1.f,
+		1.618f, 0.f, 1.f, 	1.236f, 0.f, 3.236f,	1.f, 0.f,
 		//glh
-		0, 1, -1.618, 	-1.236f, 0.f, -3.236f,	0.f, 0.f,
-		-1.618, 0, -1, 	-1.236f, 0.f, -3.236f,	0.f, 1.f,
-		0, -1, -1.618, 	-1.236f, 0.f, -3.236f,	1.f, 0.f,
+		0.f, 1.f, -1.618f, 	-1.236f, 0.f, -3.236f,	0.f, 0.f,
+		-1.618f, 0.f, -1.f, 	-1.236f, 0.f, -3.236f,	0.f, 1.f,
+		0.f, -1.f, -1.618f, 	-1.236f, 0.f, -3.236f,	1.f, 0.f,
 		//ghf
-		0, 1, -1.618, 	1.236f, 0.f, -3.236f,	0.f, 0.f,
-		0, -1, -1.618, 	1.236f, 0.f, -3.236f,	0.f, 1.f,
-		1.618, 0, -1,	1.236f, 0.f, -3.236f,	1.f, 0.f,
+		0.f, 1.f, -1.618f, 	1.236f, 0.f, -3.236f,	0.f, 0.f,
+		0.f, -1.f, -1.618f, 	1.236f, 0.f, -3.236f,	0.f, 1.f,
+		1.618f, 0.f, -1.f,	1.236f, 0.f, -3.236f,	1.f, 0.f,
 		//dkj
-		0, -1, 1.618, 	-2.f, -2.f, 2.f,		0.f, 0.f,
-		-1.618, 0, 1, 	-2.f, -2.f, 2.f,		0.f, 1.f,
-		-1, -1.618, 0, 	-2.f, -2.f, 2.f,		1.f, 0.f,
+		0.f, -1.f, 1.618f, 	-2.f, -2.f, 2.f,		0.f, 0.f,
+		-1.618f, 0.f, 1.f, 	-2.f, -2.f, 2.f,		0.f, 1.f,
+		-1.f, -1.618f, 0.f, 	-2.f, -2.f, 2.f,		1.f, 0.f,
 		//jkl
-		-1, -1.618, 0, 	-3.236f, -1.236f, 0.f,	0.f, 0.f,
-		-1.618, 0, 1, 	-3.236f, -1.236f, 0.f,	0.f, 1.f,
-		-1.618, 0, -1, 	-3.236f, -1.236f, 0.f,	1.f, 0.f,
+		-1.f, -1.618f, 0.f, 	-3.236f, -1.236f, 0.f,	0.f, 0.f,
+		-1.618f, 0.f, 1.f, 	-3.236f, -1.236f, 0.f,	0.f, 1.f,
+		-1.618f, 0.f, -1.f, 	-3.236f, -1.236f, 0.f,	1.f, 0.f,
 		//jlh
-		-1, -1.618, 0, 	-2.f, -2.f, -2.f,		0.f, 0.f,
-		-1.618, 0, -1, 	-2.f, -2.f, -2.f,		0.f, 1.f,
-		0, -1, -1.618, 	-2.f, -2.f, -2.f,		1.f, 0.f,
+		-1.f, -1.618f, 0.f, 	-2.f, -2.f, -2.f,		0.f, 0.f,
+		-1.618f, 0.f, -1.f, 	-2.f, -2.f, -2.f,		0.f, 1.f,
+		0.f, -1.f, -1.618f, 	-2.f, -2.f, -2.f,		1.f, 0.f,
 		//dji
-		0, -1, 1.618, 	0.f, -3.236f, 1.236f,	0.f, 0.f,
-		-1, -1.618, 0, 	0.f, -3.236f, 1.236f,	0.f, 1.f,
-		1, -1.618, 0, 	0.f, -3.236f, 1.236f,	1.f, 0.f,
+		0.f, -1.f, 1.618f, 	0.f, -3.236f, 1.236f,	0.f, 0.f,
+		-1.f, -1.618f, 0.f, 	0.f, -3.236f, 1.236f,	0.f, 1.f,
+		1.f, -1.618f, 0.f, 	0.f, -3.236f, 1.236f,	1.f, 0.f,
 		//jih
-		-1, -1.618, 0, 	0.f, -3.236f, -1.236f,	0.f, 0.f,
-		1, -1.618, 0, 	0.f, -3.236f, -1.236f,	0.f, 1.f,
-		0, -1, -1.618, 	0.f, -3.236f, -1.236f,	1.f, 0.f,
+		-1.f, -1.618f, 0.f, 	0.f, -3.236f, -1.236f,	0.f, 0.f,
+		1.f, -1.618f, 0.f, 	0.f, -3.236f, -1.236f,	0.f, 1.f,
+		0.f, -1.f, -1.618f, 	0.f, -3.236f, -1.236f,	1.f, 0.f,
 		//dei
-		0, -1, 1.618, 	2.f, -2.f, 2.f,			0.f, 0.f,
-		1.618, 0, 1, 	2.f, -2.f, 2.f,			0.f, 1.f,
-		1, -1.618, 0, 	2.f, -2.f, 2.f,			1.f, 0.f,
+		0.f, -1.f, 1.618f, 	2.f, -2.f, 2.f,			0.f, 0.f,
+		1.618f, 0.f, 1.f, 	2.f, -2.f, 2.f,			0.f, 1.f,
+		1.f, -1.618f, 0.f, 	2.f, -2.f, 2.f,			1.f, 0.f,
 		//eif
-		1.618, 0, 1, 	3.236f, -1.236f, 0.f,	0.f, 0.f,
-		1, -1.618, 0, 	3.236f, -1.236f, 0.f,	0.f, 1.f,
-		1.618, 0, -1, 	3.236f, -1.236f, 0.f,	1.f, 0.f,
+		1.618f, 0.f, 1.f, 	3.236f, -1.236f, 0.f,	0.f, 0.f,
+		1.f, -1.618f, 0.f, 	3.236f, -1.236f, 0.f,	0.f, 1.f,
+		1.618f, 0.f, -1.f, 	3.236f, -1.236f, 0.f,	1.f, 0.f,
 		//ifh
-		1, -1.618, 0, 	2.f, -2.f, -2.f,		0.f, 0.f,
-		1.618, 0, -1, 	2.f, -2.f, -2.f,		0.f, 1.f,
-		0, -1, -1.618, 	2.f, -2.f, -2.f,		1.f, 0.f,
+		1.f, -1.618f, 0.f, 	2.f, -2.f, -2.f,		0.f, 0.f,
+		1.618f, 0.f, -1.f, 	2.f, -2.f, -2.f,		0.f, 1.f,
+		0.f, -1.f, -1.618f, 	2.f, -2.f, -2.f,		1.f, 0.f,
 	};
 	GLuint VBO, VAO;
 	glGenVertexArrays(1, &VAO);
@@ -224,7 +226,7 @@ int main(int argc, char ** argv)
 	float lastFrame = 0.f;
 	while(!glfwWindowShouldClose(wnd))
 	{
-		float currentFrame = glfwGetTime();
+		float currentFrame = (float)glfwGetTime();
 		dt = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		processInput(wnd, dt);
@@ -244,7 +246,7 @@ int main(int argc, char ** argv)
 			shader.setVec3((lightName + ".ambient").c_str(), 0.1f, 0.1f, 0.1f);
 			shader.setVec3((lightName + ".diffuse").c_str(), 0.5f, 0.5f, 0.5f);
 			shader.setVec3((lightName + ".specular").c_str(), 1.0f, 1.0f, 1.0f);
-			shader.setVec3((lightName + ".position").c_str(), pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+			shader.setVec3((lightName + ".position").c_str(), pointLightPositions[i]);
 			shader.setFloat((lightName + ".constant").c_str(), 1.0f);
 			shader.setFloat((lightName + ".linear").c_str(), 0.09f);
 			shader.setFloat((lightName + ".quadratic").c_str(), 0.032f);
@@ -253,9 +255,20 @@ int main(int argc, char ** argv)
 		shader.setVec3("dirLight.diffuse", 1.0f, 1.0f, 1.0f);
 		shader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
 		shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-		//shader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-		//shader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
-		shader.setVec3("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
+		shader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+		shader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+		shader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+		shader.setFloat("spotLight.innerCutOff", glm::cos(glm::radians(12.5f)));
+		shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+		shader.setVec3("spotLight.direction", camera.Front);
+		shader.setVec3("viewPos", camera.Position);
+
+		// 0, 0, 0,809
+		glm::vec3 viewDir = glm::normalize(camera.Position - glm::vec3(0.5f, 0.809f, 0.f));
+		std::cout << viewDir.x << " " << viewDir.y << " " << viewDir.z << std::endl;
+		std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << std::endl;
+		std::cout << glm::dot(viewDir, -camera.Front) << std::endl;
+
 
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 640.f / 480.f, 0.1f, 100.f);
@@ -340,8 +353,8 @@ void mouse_callback(GLFWwindow *window, double x, double y)
 		firstMouse = false;
 	}
 
-	float dx = x - lastX;
-	float dy = lastY - y;
+	float dx = (float)(x - lastX);
+	float dy = (float)(lastY - y);
 	lastX = x;
 	lastY = y;
 	
@@ -350,7 +363,7 @@ void mouse_callback(GLFWwindow *window, double x, double y)
 
 void scroll_callback(GLFWwindow *window, double dx, double dy)
 {
-	camera.ProcessMouseScroll(dy);
+	camera.ProcessMouseScroll((float)dy);
 }
 
 GLuint loadTexture(const char *path)
@@ -388,4 +401,13 @@ GLuint loadTexture(const char *path)
 	}
 
 	return textureID;
+}
+
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+	{
+		if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+			camera.ResetZoom();
+	}
 }

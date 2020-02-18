@@ -16,8 +16,6 @@ configure_file(${PROJECT_SOURCE_DIR}/textures/container2.png ${CMAKE_BINARY_DIR}
 configure_file(${PROJECT_SOURCE_DIR}/textures/container2_specular.png ${CMAKE_BINARY_DIR}/textures/container2_specular.png COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/awesomeface.png ${CMAKE_BINARY_DIR}/textures/awesomeface.png COPYONLY)
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
-
 if(WIN32)
     message("WIN32!")
     find_library(GLFW_LIB_DEBUG glfw3 HINTS ${PROJECT_SOURCE_DIR}/glfw/build/src/Debug)

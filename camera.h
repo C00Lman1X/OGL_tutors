@@ -105,12 +105,12 @@ class Camera
 
     void ProcessMouseScroll(float yoffset)
     {
-        if (Zoom >= 1.0f && Zoom <= 45.0f)
-            Zoom -= yoffset;
-        if (Zoom <= 1.0f)
-            Zoom = 1.0f;
-        if (Zoom >= 45.0f)
-            Zoom = 45.0f;
+        Zoom = glm::clamp(Zoom - yoffset, 1.f, 60.f);
+    }
+
+    void ResetZoom()
+    {
+        Zoom = ZOOM;
     }
 
   private:
