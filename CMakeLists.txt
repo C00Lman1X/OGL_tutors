@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 project(GLFW_TMP)
-add_executable(GLFW_TMP main.cpp shader.cpp GLAD/src/glad.c stb_image.cpp)
+add_executable(GLFW_TMP main.cpp shader.cpp mesh.cpp model.cpp GLAD/src/glad.c stb_image.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)
 include_directories(${PROJECT_SOURCE_DIR}/glm-0.9.9-a2)
+include_directories(${PROJECT_SOURCE_DIR}/assimp/include)
 
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex_lamp.glsl ${CMAKE_BINARY_DIR}/shaders/vertex_lamp.glsl COPYONLY)
@@ -16,15 +17,14 @@ configure_file(${PROJECT_SOURCE_DIR}/textures/container2.png ${CMAKE_BINARY_DIR}
 configure_file(${PROJECT_SOURCE_DIR}/textures/container2_specular.png ${CMAKE_BINARY_DIR}/textures/container2_specular.png COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/awesomeface.png ${CMAKE_BINARY_DIR}/textures/awesomeface.png COPYONLY)
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
-
 if(WIN32)
     message("WIN32!")
     find_library(GLFW_LIB_DEBUG glfw3 HINTS ${PROJECT_SOURCE_DIR}/glfw/build/src/Debug)
+    find_library(ASSIMP_LIB_DEBUG assimp-vc142-mtd HINTS ${PROJECT_SOURCE_DIR}/assimp)
     find_library(GLFW_LIB_RELEASE glfw3 HINTS ${PROJECT_SOURCE_DIR}/glfw/build/src/Release)
     target_link_libraries(GLFW_TMP debug ${GLFW_LIB_DEBUG})
     target_link_libraries(GLFW_TMP optimized ${GLFW_LIB_RELEASE})
-    target_link_libraries(GLFW_TMP opengl32)
+    target_link_libraries(GLFW_TMP opengl32 ${ASSIMP_LIB_DEBUG})
 else()
     message("Unix!")
     find_library(GLFW_LIB glfw3 HINTS ${PROJECT_SOURCE_DIR}/glfw/build/src)
