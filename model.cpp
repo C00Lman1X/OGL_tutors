@@ -1,9 +1,18 @@
 #include "model.h"
 #include "shader.h"
 #include "stb_image.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 void Model::Draw(Shader shader)
 {
+    glm::mat4 modelMat(1.f);
+    modelMat = glm::translate(modelMat, location);
+    modelMat = glm::scale(modelMat, scale);
+    //modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
+    //modelMat = glm::rotate(modelMat, glm::radians(rotation.y), glm::vec3(0.f, 1.0f, 0.0f));
+    //modelMat = glm::rotate(modelMat, glm::radians(rotation.z), glm::vec3(0.f, 0.0f, 1.0f));
+    shader.setMat4("model", modelMat);
+
     for(GLuint i = 0; i < meshes.size(); ++i)
         meshes[i].Draw(shader);
 }
@@ -11,7 +20,7 @@ void Model::Draw(Shader shader)
 void Model::loadModel(std::string path)
 {
     Assimp::Importer import;
-    const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {

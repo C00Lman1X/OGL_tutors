@@ -18,6 +18,10 @@ public:
         loadModel(path);
     }
     void Draw(Shader shader);
+    
+    glm::vec3 location{0.f};
+    glm::vec3 rotation;
+    glm::vec3 scale{1.f};
 
 private:
     std::vector<Texture> textures_loaded;
