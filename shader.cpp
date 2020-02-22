@@ -4,7 +4,7 @@
 Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 {
     char *vShaderCode = new char[4096];
-    char *fShaderCode = new char[4096];
+    char *fShaderCode = new char[8192];
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
 
@@ -85,35 +85,68 @@ void Shader::use()
 
 void Shader::setBool(const std::string& name, bool value) const
 {
-    glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+    GLint loc = getUniformLoc(name);
+    glUniform1i(loc, (int)value);
 }
 
 void Shader::setInt(const std::string &name, int value) const
 {
-    glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+    GLint loc = getUniformLoc(name);
+    glUniform1i(loc, value);
 }
 
 void Shader::setFloat(const std::string &name, float value) const
 {
-    glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+    GLint loc = getUniformLoc(name);
+    glUniform1f(loc, value);
 }
 
 void Shader::set4Float(const std::string &name, float f1, float f2, float f3, float f4) const
 {
-    glUniform4f(glGetUniformLocation(ID, name.c_str()), f1, f2, f3, f4);
+    GLint loc = getUniformLoc(name);
+    glUniform4f(loc, f1, f2, f3, f4);
 }
 
 void Shader::setVec3(const std::string &name, float x, float y, float z) const
 {
-    glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+    GLint loc = getUniformLoc(name);
+    glUniform3f(loc, x, y, z);
 }
 
 void Shader::setVec3(const std::string &name, const glm::vec3 &vec) const
 {
-    glUniform3f(glGetUniformLocation(ID, name.c_str()), vec.x, vec.y, vec.z);
+    GLint loc = getUniformLoc(name);
+    glUniform3f(loc, vec.x, vec.y, vec.z);
 }
 
 void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
 {
-    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+    GLint loc = getUniformLoc(name);
+    glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+GLint Shader::getUniformLoc(const std::string &name) const
+{
+    auto it = checkedUniforms.find(name);
+    if (it != checkedUniforms.end())
+    {
+        if (it->second)
+            return glGetUniformLocation(ID, name.c_str());
+        else
+            return -1;
+    }
+    else
+    {
+        GLint loc = glGetUniformLocation(ID, name.c_str());
+        if (loc == -1)
+        {
+            std::cerr << "ERROR::SHADER::PROGRAM::NO_UNIFORM " << name << std::endl;
+            checkedUniforms[name] = false;
+        }
+        else
+        {
+            checkedUniforms[name] = true;
+        }
+        return loc;
+    }
 }

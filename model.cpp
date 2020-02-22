@@ -5,12 +5,17 @@
 
 void Model::Draw(Shader shader)
 {
+    shader.setVec3("solidColor", color);
+    shader.setBool("isSolidColor", solidColor);
+
+    shader.setFloat("material.shininess", shininess);
+
     glm::mat4 modelMat(1.f);
     modelMat = glm::translate(modelMat, location);
     modelMat = glm::scale(modelMat, scale);
-    //modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
-    //modelMat = glm::rotate(modelMat, glm::radians(rotation.y), glm::vec3(0.f, 1.0f, 0.0f));
-    //modelMat = glm::rotate(modelMat, glm::radians(rotation.z), glm::vec3(0.f, 0.0f, 1.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.y), glm::vec3(0.f, 1.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.z), glm::vec3(0.f, 0.0f, 1.0f));
     shader.setMat4("model", modelMat);
 
     for(GLuint i = 0; i < meshes.size(); ++i)

@@ -93,8 +93,20 @@ int main(int argc, char ** argv)
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
-	Model model("C:\\Users\\aliaksei.dziakanchuk\\Documents\\OGL_tutors\\nanosuit\\nanosuit.obj");
-	Model model2("C:\\Users\\aliaksei.dziakanchuk\\Documents\\OGL_tutors\\shapes\\sphere.nff");
+	std::vector<Model> models;
+	Model model("nanosuit\\nanosuit.obj");
+	model.location = {0.f, 0.f, -3.f};
+	models.push_back(model);
+	Model model2("shapes\\sphere.nff");
+	model2.solidColor = true;
+	model2.color = {1.f, 0.5f, 0.f};
+	models.push_back(model2);
+
+
+	Light dirLight;
+	dirLight.type = 1;
+	dirLight.direction = {-0.5f, -1.f, 0.3f};
+	DATA.lights.push_back(dirLight);
 
 	float dt = 0.f;
 	float lastFrame = 0.f;
@@ -109,15 +121,16 @@ int main(int argc, char ** argv)
 
 		shader.use();
 
-		//SetLights(shader);
+		shader.setVec3("viewPos", DATA.camera.Position);
+		SetLights(shader);
 
 		glm::mat4 view = DATA.camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(DATA.camera.Zoom), 640.f / 480.f, 0.1f, 100.f);
-		//projection = glm::mat4(1.f);
 		shader.setMat4("view", view);
 		shader.setMat4("projection", projection);
 
-		model.Draw(shader);
+		for(Model& model : models)
+			model.Draw(shader);
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
@@ -186,26 +199,38 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 			DATA.camera.ResetZoom();
 	}
 }
-/*
+
 void SetLights(Shader& shader)
 {
 	int pointLightsCount = 0, dirLightsCount = 0, spotLightsCount = 0;
 	for(Light light : DATA.lights)
 	{
+		std::string lightName;
 		switch (light.type)
 		{
 		case 0:
 		{
-			std::string lightName = "pointLights[" + std::to_string(pointLightsCount++) + "]";
-			shader.
-		}
+			lightName = "pointLights[" + std::to_string(pointLightsCount++) + "]";
 			break;
+		}
 		case 1:
-			lightName = 
+		{
+			lightName = "dirLights[" + std::to_string(dirLightsCount++) + "]";
+			shader.setVec3(lightName + ".direction", light.direction);
+			break;
+		}
+		case 2:
+		{
+			lightName = "spotLights[" + std::to_string(spotLightsCount++) + "]";
+			break;
+		}
 		
 		default:
 			break;
 		}
+
+		shader.setVec3(lightName + ".ambient", light.ambient);
+		shader.setVec3(lightName + ".diffuse", light.diffuse);
+		shader.setVec3(lightName + ".specular", light.specular);
 	}
 }
-*/

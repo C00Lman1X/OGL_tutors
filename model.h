@@ -20,8 +20,13 @@ public:
     void Draw(Shader shader);
     
     glm::vec3 location{0.f};
-    glm::vec3 rotation;
+    glm::vec3 rotation{0.f};
     glm::vec3 scale{1.f};
+
+    bool solidColor = false;
+    glm::vec3 color{0.f, 0.f, 0.f};
+
+    float shininess = 32.f;
 
 private:
     std::vector<Texture> textures_loaded;

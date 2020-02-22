@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <map>
 
 class Shader
 {
@@ -25,6 +26,11 @@ public:
     void setVec3(const std::string &name, const glm::vec3 &vec) const;
     void setMat4(const std::string &name, const glm::mat4 &mat) const;
     void set4Float(const std::string &name, float f1, float f2, float f3, float f4) const;
+
+private:
+    GLint getUniformLoc(const std::string &name) const;
+
+    mutable std::map<std::string, bool> checkedUniforms; // true - is active
 };
 
 #endif

@@ -7,10 +7,12 @@
 
 struct Light {
     int type; // 0 - point light, 1 - direction light, 2 - spotlight
+    glm::vec3 ambient{0.1f, 0.1f, 0.1f};
+    glm::vec3 diffuse{1.0f, 1.0f, 1.0f};
+    glm::vec3 specular{1.0f, 1.0f, 1.0f};
+    
+    // only for point and spot light
     glm::vec3 location;
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
     
     // only for spot and direction light
     glm::vec3 direction;

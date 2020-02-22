@@ -1,9 +1,16 @@
 #version 330 core
 
 struct Material {
-	float someFloat;
-	sampler2D diffuse;
-	sampler2D specular;
+	sampler2D texture_diffuse1;
+	sampler2D texture_diffuse2;
+	sampler2D texture_diffuse3;
+	sampler2D texture_diffuse4;
+	sampler2D texture_diffuse5;
+	sampler2D texture_specular1;
+	sampler2D texture_specular2;
+	sampler2D texture_specular3;
+	sampler2D texture_specular4;
+	sampler2D texture_specular5;
 	float shininess;
 };
 struct SampledMaterial {
@@ -89,12 +96,14 @@ vec3 CalcSpotLight(SpotLight light, vec3 fragPos, vec3 viewDir, SampledMaterial 
 }
 /////////////////////////////////////////////////////////////////////////////////
 
-uniform DirLight dirLight;
+#define NR_DIR_LIGHTS 10
+uniform DirLight dirLights[NR_DIR_LIGHTS];
 
 #define NR_POINT_LIGHTS 10
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
-uniform SpotLight spotLight;
+#define NR_SPOT_LIGHTS 10
+uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 
 out vec4 FragColor;
 
@@ -104,6 +113,8 @@ in vec2 TexCoords;
 
 uniform vec3 viewPos;
 uniform Material material;
+uniform bool isSolidColor;
+uniform vec3 solidColor;
 
 void main()
 {
@@ -111,14 +122,24 @@ void main()
 	vec3 viewDir = normalize(viewPos - FragPos);
 
 	SampledMaterial sMaterial;
-	sMaterial.diffuse = texture(material.diffuse, TexCoords);
-	sMaterial.specular = texture(material.specular, TexCoords);
+	sMaterial.diffuse = texture(material.texture_diffuse1, TexCoords);
+	sMaterial.specular = texture(material.texture_specular1, TexCoords);
 	sMaterial.shininess = material.shininess;
-	/*vec3 result = CalcDirLight(dirLight, norm, viewDir, sMaterial);
+
+	if (isSolidColor)
+	{
+		sMaterial.diffuse = vec4(solidColor, 1.0);
+		sMaterial.specular = vec4(solidColor, 1.0);
+	}
+
+	vec3 result = vec3(0.0, 0.0, 0.0);
+	for(int i = 0; i < NR_DIR_LIGHTS; i++)
+		result += CalcDirLight(dirLights[i], norm, viewDir, sMaterial);
 	for(int i = 0; i < NR_POINT_LIGHTS; i++)
 		result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, sMaterial);
-	result += CalcSpotLight(spotLight, FragPos, viewDir, sMaterial);*/
+	for(int i = 0; i < NR_SPOT_LIGHTS; i++)
+		result += CalcSpotLight(spotLights[i], FragPos, viewDir, sMaterial);
 	
-	//FragColor = vec4(result, 1.0);
-	FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	FragColor = vec4(CalcDirLight(dirLights[0], norm, viewDir, sMaterial), 1.0);
+	//FragColor = vec4(sMaterial.diffuse);
 }

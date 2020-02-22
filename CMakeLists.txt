@@ -16,6 +16,8 @@ configure_file(${PROJECT_SOURCE_DIR}/textures/container.jpg ${CMAKE_BINARY_DIR}/
 configure_file(${PROJECT_SOURCE_DIR}/textures/container2.png ${CMAKE_BINARY_DIR}/textures/container2.png COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/container2_specular.png ${CMAKE_BINARY_DIR}/textures/container2_specular.png COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/textures/awesomeface.png ${CMAKE_BINARY_DIR}/textures/awesomeface.png COPYONLY)
+file(COPY ${PROJECT_SOURCE_DIR}/nanosuit DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/shapes DESTINATION ${CMAKE_BINARY_DIR})
 
 if(WIN32)
     message("WIN32!")
