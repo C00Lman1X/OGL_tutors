@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 project(GLFW_TMP)
-add_executable(GLFW_TMP main.cpp shader.cpp mesh.cpp model.cpp GLAD/src/glad.c stb_image.cpp)
+aux_source_directory(${PROJECT_SOURCE_DIR}/imgui IMGUI_SOURCES)
+add_executable(GLFW_TMP main.cpp shader.cpp mesh.cpp model.cpp GLAD/src/glad.c stb_image.cpp ${IMGUI_SOURCES})
 
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)
 include_directories(${PROJECT_SOURCE_DIR}/glm-0.9.9-a2)
 include_directories(${PROJECT_SOURCE_DIR}/assimp/include)
+include_directories(${PROJECT_SOURCE_DIR}/imgui)
 
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/shaders/vertex_lamp.glsl ${CMAKE_BINARY_DIR}/shaders/vertex_lamp.glsl COPYONLY)

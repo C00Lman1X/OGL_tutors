@@ -3,6 +3,10 @@
 #include <iostream>
 #include <cmath>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "shader.h"
 #include "stb_image.h"
 #include "model.h"
@@ -77,7 +81,7 @@ int main(int argc, char ** argv)
 	glfwSetScrollCallback(wnd, scroll_callback);
 	glfwSetMouseButtonCallback(wnd, mouse_button_callback);
 
-	glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	glfwMakeContextCurrent(wnd);
 
@@ -90,6 +94,14 @@ int main(int argc, char ** argv)
 	glViewport(0, 0, 640, 480);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(wnd, true);
+	ImGui_ImplOpenGL3_Init("#version 330 core");
 
 	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
@@ -105,7 +117,6 @@ int main(int argc, char ** argv)
 
 	Light dirLight;
 	dirLight.type = 1;
-	dirLight.direction = {-0.5f, -1.f, 0.3f};
 	DATA.lights.push_back(dirLight);
 
 	float dt = 0.f;
@@ -132,8 +143,77 @@ int main(int argc, char ** argv)
 		for(Model& model : models)
 			model.Draw(shader);
 
+		auto lightToDelete = DATA.lights.end();
+		int lightTypeToAdd = -1;
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+		{
+			ImGui::Begin("Lights");
+			for(auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
+			{
+				Light& light = *itLight;
+				if (light.type == 0)
+				{
+					ImGui::Text("Point");
+					ImGui::Indent();
+					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+				}
+				else if (light.type == 1)
+				{
+					ImGui::Text("Directional");
+					ImGui::Indent();
+					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+				}
+				else if (light.type == 2)
+				{
+					ImGui::Text("Spot");
+					ImGui::Indent();
+					ImGui::DragFloat("innerCutOff", &light.innerCutOff, 0.01f, 0.f, 1.f);
+					ImGui::DragFloat("outerCutOff", &light.outerCutOff, 0.01f, 0.f, 1.f);
+				}
+				ImGui::ColorEdit3("ambient", (float*)&light.ambient, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("diffuse", (float*)&light.diffuse, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("specular", (float*)&light.specular, ImGuiColorEditFlags_Float);
+				if (ImGui::Button("Delete light"))
+					lightToDelete = itLight;
+
+				ImGui::Unindent();	
+			}
+
+			if (ImGui::Button("AddPointLight"))
+			{
+				lightTypeToAdd = 0;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("AddDirectionalLight"))
+			{
+				lightTypeToAdd = 1;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("AddSpotLight"))
+			{
+				lightTypeToAdd = 2;
+			}
+
+			std::stringstream sstr;
+			sstr << "io.WantCaptureMouse = " << io.WantCaptureMouse << std::endl;
+			sstr << "io.WantCaptureKeyboard = " << io.WantCaptureKeyboard << std::endl;
+			sstr << "io.WantSetMousePos = " << io.WantSetMousePos << std::endl;
+			ImGui::Text(sstr.str().c_str());
+			ImGui::End();
+		}
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
+
+		if (lightToDelete != DATA.lights.end())
+			DATA.lights.erase(lightToDelete);
+		if (lightTypeToAdd != -1)
+			DATA.lights.emplace_back(lightTypeToAdd);
 	}
 
 	glfwTerminate();
@@ -142,6 +222,9 @@ int main(int argc, char ** argv)
 
 void processInput(GLFWwindow *window, float dt)
 {
+	if (ImGui::GetIO().WantCaptureKeyboard)
+		return;
+		
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		DATA.camera.ProcessKeyboard(Camera_Movement::FORWARD, dt);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -170,7 +253,8 @@ void processInput(GLFWwindow *window, float dt)
 
 void mouse_callback(GLFWwindow *window, double x, double y)
 {
-	static bool firstMouse = true;
+	ImGuiIO& io = ImGui::GetIO();
+	static bool firstMouse = false;
 	if (firstMouse)
 	{
 		DATA.lastX = x;
@@ -183,7 +267,8 @@ void mouse_callback(GLFWwindow *window, double x, double y)
 	DATA.lastX = x;
 	DATA.lastY = y;
 	
-	DATA.camera.ProcessMouseMovement(dx, dy);
+	if (DATA.cursorCaptured)
+		DATA.camera.ProcessMouseMovement(dx, dy);
 }
 
 void scroll_callback(GLFWwindow *window, double dx, double dy)
@@ -193,6 +278,17 @@ void scroll_callback(GLFWwindow *window, double dx, double dy)
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
+	ImGuiIO& io = ImGui::GetIO();
+	if (action == GLFW_PRESS && !io.WantCaptureMouse)
+	{
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		DATA.cursorCaptured = true;
+	}
+	if (action == GLFW_RELEASE)
+	{
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		DATA.cursorCaptured = false;
+	}
 	if (action == GLFW_PRESS)
 	{
 		if (button == GLFW_MOUSE_BUTTON_MIDDLE)
