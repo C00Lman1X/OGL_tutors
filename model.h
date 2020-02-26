@@ -17,7 +17,7 @@ public:
     Model(char *path) {
         loadModel(path);
     }
-    void Draw(Shader shader);
+    void Draw(Shader& shader, bool light = false, float angle = 0.f, glm::vec3 axis = {0.f, 0.f, 0.f});
     
     glm::vec3 location{0.f};
     glm::vec3 rotation{0.f};

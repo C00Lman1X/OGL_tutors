@@ -32,7 +32,7 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
     catch(std::ifstream::failure e)
     {
         std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-    }
+    }    
 
     GLuint vertex, fragment;
     int success;
@@ -67,7 +67,7 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
     if (!success)
     {
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
                   << infoLog << std::endl;
     }
 

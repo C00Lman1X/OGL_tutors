@@ -30,6 +30,7 @@ struct DirLight {
 
 struct SpotLight {
 	vec3 direction;
+	vec3 position;
 	float innerCutOff;
 	float outerCutOff;
 
@@ -81,10 +82,11 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, S
 	return (ambient + diffuse + specular) * attenuation;
 }
 
-vec3 CalcSpotLight(SpotLight light, vec3 fragPos, vec3 viewDir, SampledMaterial sMaterial)
+vec3 CalcSpotLight(SpotLight light, vec3 fragPos, SampledMaterial sMaterial)
 {
+	vec3 fragToLightDir = normalize(light.position - fragPos);
 
-	float theta = dot(viewDir, normalize(-light.direction));
+	float theta = dot(fragToLightDir, normalize(-light.direction));
 	float epsilon = light.innerCutOff - light.outerCutOff;
 	float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
@@ -98,12 +100,15 @@ vec3 CalcSpotLight(SpotLight light, vec3 fragPos, vec3 viewDir, SampledMaterial 
 
 #define NR_DIR_LIGHTS 10
 uniform DirLight dirLights[NR_DIR_LIGHTS];
+uniform int dirLightsCount;
 
 #define NR_POINT_LIGHTS 10
 uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform int pointLightsCount;
 
 #define NR_SPOT_LIGHTS 10
 uniform SpotLight spotLights[NR_SPOT_LIGHTS];
+uniform int spotLightsCount;
 
 out vec4 FragColor;
 
@@ -114,7 +119,7 @@ in vec2 TexCoords;
 uniform vec3 viewPos;
 uniform Material material;
 uniform bool isSolidColor;
-uniform vec3 solidColor;
+uniform vec3 color;
 
 void main()
 {
@@ -128,18 +133,30 @@ void main()
 
 	if (isSolidColor)
 	{
-		sMaterial.diffuse = vec4(solidColor, 1.0);
-		sMaterial.specular = vec4(solidColor, 1.0);
+		sMaterial.diffuse = vec4(color, 1.0);
+		sMaterial.specular = vec4(color, 1.0);
 	}
 
 	vec3 result = vec3(0.0, 0.0, 0.0);
 	for(int i = 0; i < NR_DIR_LIGHTS; i++)
+	{
+		if (i >= dirLightsCount)
+			break;
 		result += CalcDirLight(dirLights[i], norm, viewDir, sMaterial);
+	}
 	for(int i = 0; i < NR_POINT_LIGHTS; i++)
+	{
+		if (i >= pointLightsCount)
+			break;
 		result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, sMaterial);
+	}
 	for(int i = 0; i < NR_SPOT_LIGHTS; i++)
-		result += CalcSpotLight(spotLights[i], FragPos, viewDir, sMaterial);
+	{
+		if (i >= spotLightsCount)
+			break;
+		result += CalcSpotLight(spotLights[i], FragPos, sMaterial);
+	}
 	
-	FragColor = vec4(CalcDirLight(dirLights[0], norm, viewDir, sMaterial), 1.0);
+	FragColor = vec4(result, 1.0);
 	//FragColor = vec4(sMaterial.diffuse);
 }
