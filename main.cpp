@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "shader.h"
+#include "ShadersManager.h"
 #include "stb_image.h"
 #include "model.h"
 #include <glm/glm.hpp>
@@ -23,7 +24,8 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 void scroll_callback(GLFWwindow *window, double dx, double dy);
 GLuint loadTexture(const char *path);
 
-void SetLights(Shader& shader);
+void SetLights(int shaderId);
+void DrawGUI();
 
 void error_callback(int error, const char* description)
 {
@@ -96,9 +98,12 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 
+	ShadersManager& shadersManager = DATA.shadersManager;
+
 	glViewport(0, 0, (GLsizei)DATA.width, (GLsizei)DATA.height);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -108,8 +113,8 @@ int main(int argc, char ** argv)
 	ImGui_ImplGlfw_InitForOpenGL(wnd, true);
 	ImGui_ImplOpenGL3_Init("#version 330 core");
 
-	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-	Shader lightShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
+	int modelShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment.glsl");
+	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 
 	std::vector<Model> models;
 	Model model("nanosuit\\nanosuit.obj");
@@ -136,92 +141,19 @@ int main(int argc, char ** argv)
 		lastFrame = currentFrame;
 		processInput(wnd, dt);
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		shader.use();
-
-		shader.setVec3("viewPos", DATA.camera.Position);
-		SetLights(shader);
+		SetLights(modelShaderID);
 
 		glm::mat4 view = DATA.camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(DATA.camera.Zoom), DATA.width / DATA.height, 0.1f, 100.f);
-		shader.setMat4("view", view);
-		shader.setMat4("projection", projection);
+		shadersManager.set("view", view);
+		shadersManager.set("projection", projection);
+		shadersManager.set("viewPos", DATA.camera.Position);
 
 		for(Model& model : models)
-			model.Draw(shader);
-
-		auto lightToDelete = DATA.lights.end();
-		int lightTypeToAdd = -1;
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-		{
-			ImGui::Begin("Lights");
-			int i = 0;
-			for(auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
-			{
-				ImGui::PushID(++i);
-				Light& light = *itLight;
-				if (light.type == 0)
-				{
-					ImGui::Text("Point");
-					ImGui::Indent();
-					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
-				}
-				else if (light.type == 1)
-				{
-					ImGui::Text("Directional");
-					ImGui::Indent();
-					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
-				}
-				else if (light.type == 2)
-				{
-					ImGui::Text("Spot");
-					ImGui::Indent();
-					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
-					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
-					ImGui::DragFloat("innerCutOff", &light.innerCutOff, 0.001f, 0.f, 1.f);
-					ImGui::DragFloat("outerCutOff", &light.outerCutOff, 0.001f, 0.f, 1.f);
-				}
-				ImGui::ColorEdit3("ambient", (float*)&light.ambient, ImGuiColorEditFlags_Float);
-				ImGui::ColorEdit3("diffuse", (float*)&light.diffuse, ImGuiColorEditFlags_Float);
-				ImGui::ColorEdit3("specular", (float*)&light.specular, ImGuiColorEditFlags_Float);
-				if (ImGui::Button("Delete light"))
-					lightToDelete = itLight;
-
-				ImGui::Unindent();
-				ImGui::PopID();
-			}
-
-			if (ImGui::Button("AddPointLight"))
-			{
-				lightTypeToAdd = 0;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("AddDirectionalLight"))
-			{
-				lightTypeToAdd = 1;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("AddSpotLight"))
-			{
-				lightTypeToAdd = 2;
-			}
-
-			std::stringstream sstr;
-			sstr << "lastX: " << DATA.lastX << "  lastY: " << DATA.lastY;
-			ImGui::Text(sstr.str().c_str());
-
-			ImGui::End();
-		}
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			model.Draw(shadersManager.GetShader(modelShaderID));
 		
-		lightShader.use();
-		lightShader.setMat4("view", view);
-		lightShader.setMat4("projection", projection);
 		for(Light& light : DATA.lights)
 		{
 			if (light.type == 0)
@@ -229,7 +161,7 @@ int main(int argc, char ** argv)
 				sphereModel.location = light.location;
 				sphereModel.color = light.diffuse;
 				sphereModel.scale = {0.1f, 0.1f, 0.1f};
-				sphereModel.Draw(lightShader, true);
+				sphereModel.Draw(shadersManager.GetShader(lightShaderID), true);
 			}
 			else if (light.type == 2)
 			{
@@ -239,17 +171,14 @@ int main(int argc, char ** argv)
 
 				glm::vec3 axis = glm::cross({0.f, 1.f, 0.f}, glm::normalize(light.direction));
 				float angle = glm::acos(glm::dot({0.f, 1.f, 0.f}, glm::normalize(light.direction)));
-				coneModel.Draw(lightShader, true, angle, axis);
+				coneModel.Draw(shadersManager.GetShader(lightShaderID), true, angle, axis);
 			}
 		}
 
+		DrawGUI();
+
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
-
-		if (lightToDelete != DATA.lights.end())
-			DATA.lights.erase(lightToDelete);
-		if (lightTypeToAdd != -1)
-			DATA.lights.emplace_back(lightTypeToAdd);
 	}
 
 	glfwTerminate();
@@ -327,8 +256,10 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 	}
 }
 
-void SetLights(Shader& shader)
+void SetLights(int shaderId)
 {
+	Shader& shader = DATA.shadersManager.GetShader(shaderId);
+	shader.use();
 	int pointLightsCount = 0, dirLightsCount = 0, spotLightsCount = 0;
 	for(const Light& light : DATA.lights)
 	{
@@ -338,25 +269,25 @@ void SetLights(Shader& shader)
 		case 0:
 		{
 			lightName = "pointLights[" + std::to_string(pointLightsCount++) + "]";
-			shader.setVec3(lightName + ".position", light.location);
-			shader.setFloat(lightName + ".constant", light.constant);
-			shader.setFloat(lightName + ".linear", light.linear);
-			shader.setFloat(lightName + ".quadratic", light.quadratic);
+			shader.set(lightName + ".position", light.location);
+			shader.set(lightName + ".constant", light.constant);
+			shader.set(lightName + ".linear", light.linear);
+			shader.set(lightName + ".quadratic", light.quadratic);
 			break;
 		}
 		case 1:
 		{
 			lightName = "dirLights[" + std::to_string(dirLightsCount++) + "]";
-			shader.setVec3(lightName + ".direction", light.direction);
+			shader.set(lightName + ".direction", light.direction);
 			break;
 		}
 		case 2:
 		{
 			lightName = "spotLights[" + std::to_string(spotLightsCount++) + "]";
-			shader.setFloat(lightName + ".innerCutOff", light.innerCutOff);
-			shader.setFloat(lightName + ".outerCutOff", light.outerCutOff);
-			shader.setVec3(lightName + ".direction", light.direction);
-			shader.setVec3(lightName + ".position", light.location);
+			shader.set(lightName + ".innerCutOff", light.innerCutOff);
+			shader.set(lightName + ".outerCutOff", light.outerCutOff);
+			shader.set(lightName + ".direction", light.direction);
+			shader.set(lightName + ".position", light.location);
 			break;
 		}
 		
@@ -364,12 +295,90 @@ void SetLights(Shader& shader)
 			break;
 		}
 
-		shader.setVec3(lightName + ".ambient", light.ambient);
-		shader.setVec3(lightName + ".diffuse", light.diffuse);
-		shader.setVec3(lightName + ".specular", light.specular);
+		shader.set(lightName + ".ambient", light.ambient);
+		shader.set(lightName + ".diffuse", light.diffuse);
+		shader.set(lightName + ".specular", light.specular);
 	}
 
-	shader.setInt("dirLightsCount", dirLightsCount);
-	shader.setInt("pointLightsCount", pointLightsCount);
-	shader.setInt("spotLightsCount", spotLightsCount);
+	shader.set("dirLightsCount", dirLightsCount);
+	shader.set("pointLightsCount", pointLightsCount);
+	shader.set("spotLightsCount", spotLightsCount);
+}
+
+void DrawGUI()
+{
+	auto lightToDelete = DATA.lights.end();
+	int lightTypeToAdd = -1;
+	
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	{
+		ImGui::Begin("Lights");
+		int i = 0;
+		for(auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
+		{
+			ImGui::PushID(++i);
+			Light& light = *itLight;
+			if (light.type == 0)
+			{
+				ImGui::Text("Point");
+				ImGui::Indent();
+				ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+			}
+			else if (light.type == 1)
+			{
+				ImGui::Text("Directional");
+				ImGui::Indent();
+				ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+			}
+			else if (light.type == 2)
+			{
+				ImGui::Text("Spot");
+				ImGui::Indent();
+				ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+				ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+				ImGui::DragFloat("innerCutOff", &light.innerCutOff, 0.001f, 0.f, 1.f);
+				ImGui::DragFloat("outerCutOff", &light.outerCutOff, 0.001f, 0.f, 1.f);
+			}
+			ImGui::ColorEdit3("ambient", (float*)&light.ambient, ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("diffuse", (float*)&light.diffuse, ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("specular", (float*)&light.specular, ImGuiColorEditFlags_Float);
+			if (ImGui::Button("Delete light"))
+				lightToDelete = itLight;
+
+			ImGui::Unindent();
+			ImGui::PopID();
+		}
+
+		if (ImGui::Button("AddPointLight"))
+		{
+			lightTypeToAdd = 0;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("AddDirectionalLight"))
+		{
+			lightTypeToAdd = 1;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("AddSpotLight"))
+		{
+			lightTypeToAdd = 2;
+		}
+
+		/*
+		std::stringstream sstr;
+		sstr << "lastX: " << DATA.lastX << "  lastY: " << DATA.lastY;
+		ImGui::Text(sstr.str().c_str());
+		*/
+
+		ImGui::End();
+	}
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	if (lightToDelete != DATA.lights.end())
+		DATA.lights.erase(lightToDelete);
+	if (lightTypeToAdd != -1)
+		DATA.lights.emplace_back(lightTypeToAdd);
 }

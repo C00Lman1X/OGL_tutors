@@ -83,43 +83,43 @@ void Shader::use()
     glUseProgram(ID);
 }
 
-void Shader::setBool(const std::string& name, bool value) const
+void Shader::set(const std::string& name, bool value) const
 {
     GLint loc = getUniformLoc(name);
     glUniform1i(loc, (int)value);
 }
 
-void Shader::setInt(const std::string &name, int value) const
+void Shader::set(const std::string &name, int value) const
 {
     GLint loc = getUniformLoc(name);
     glUniform1i(loc, value);
 }
 
-void Shader::setFloat(const std::string &name, float value) const
+void Shader::set(const std::string &name, float value) const
 {
     GLint loc = getUniformLoc(name);
     glUniform1f(loc, value);
 }
 
-void Shader::set4Float(const std::string &name, float f1, float f2, float f3, float f4) const
+void Shader::set(const std::string &name, float f1, float f2, float f3, float f4) const
 {
     GLint loc = getUniformLoc(name);
     glUniform4f(loc, f1, f2, f3, f4);
 }
 
-void Shader::setVec3(const std::string &name, float x, float y, float z) const
+void Shader::set(const std::string &name, float x, float y, float z) const
 {
     GLint loc = getUniformLoc(name);
     glUniform3f(loc, x, y, z);
 }
 
-void Shader::setVec3(const std::string &name, const glm::vec3 &vec) const
+void Shader::set(const std::string &name, const glm::vec3 &vec) const
 {
     GLint loc = getUniformLoc(name);
     glUniform3f(loc, vec.x, vec.y, vec.z);
 }
 
-void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
+void Shader::set(const std::string &name, const glm::mat4 &mat) const
 {
     GLint loc = getUniformLoc(name);
     glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat));

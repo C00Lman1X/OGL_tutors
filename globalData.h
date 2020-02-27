@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include "camera.h"
+#include "ShadersManager.h"
 
 struct Light {
     int type; // 0 - point light, 1 - direction light, 2 - spotlight
@@ -55,6 +56,8 @@ public:
     double lastX, lastY;
 
     static const glm::vec3 DEFAULT_CAMERA_POS;
+
+    ShadersManager shadersManager;
 
 private:
     GlobalData()

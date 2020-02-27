@@ -5,13 +5,14 @@
 
 void Model::Draw(Shader& shader, bool light/* = false*/, float angle/* = 0.f*/, glm::vec3 axis/* = {0.f, 0.f, 0.f}*/)
 {
+    shader.use();
     if (!light)
     {
-        shader.setBool("isSolidColor", solidColor);
+        shader.set("isSolidColor", solidColor);
 
-        shader.setFloat("material.shininess", shininess);
+        shader.set("material.shininess", shininess);
     }
-    shader.setVec3("color", color);
+    shader.set("color", color);
 
     glm::mat4 modelMat(1.f);
     modelMat = glm::translate(modelMat, location);
@@ -26,7 +27,7 @@ void Model::Draw(Shader& shader, bool light/* = false*/, float angle/* = 0.f*/, 
     {
         modelMat = glm::rotate(modelMat, angle, axis);
     }
-    shader.setMat4("model", modelMat);
+    shader.set("model", modelMat);
 
     for(GLuint i = 0; i < meshes.size(); ++i)
         meshes[i].Draw(shader);

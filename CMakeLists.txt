@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.5.1)
 
 project(GLFW_TMP)
 aux_source_directory(${PROJECT_SOURCE_DIR}/imgui IMGUI_SOURCES)
-add_executable(GLFW_TMP main.cpp shader.cpp mesh.cpp model.cpp GLAD/src/glad.c stb_image.cpp ${IMGUI_SOURCES})
+aux_source_directory(${PROJECT_SOURCE_DIR} SOURCES)
+add_executable(GLFW_TMP ${SOURCES} GLAD/src/glad.c ${IMGUI_SOURCES})
 
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/GLAD/include)
