@@ -1,36 +1,61 @@
 #include "model.h"
 #include "shader.h"
 #include "stb_image.h"
+#include "globalData.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-void Model::Draw(Shader& shader, bool light/* = false*/, float angle/* = 0.f*/, glm::vec3 axis/* = {0.f, 0.f, 0.f}*/)
+void Model::Draw(Shader& shader)
+{
+    for(GLuint i = 0; i < meshes.size(); ++i)
+        meshes[i].Draw(shader);
+}
+
+void Model::DrawPointLight(Shader& shader)
 {
     shader.use();
-    if (!light)
-    {
-        shader.set("isSolidColor", solidColor);
-
-        shader.set("material.shininess", shininess);
-    }
     shader.set("color", color);
 
     glm::mat4 modelMat(1.f);
     modelMat = glm::translate(modelMat, location);
     modelMat = glm::scale(modelMat, scale);
-    if (angle == 0.f)
-    {
-        modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
-        modelMat = glm::rotate(modelMat, glm::radians(rotation.y), glm::vec3(0.f, 1.0f, 0.0f));
-        modelMat = glm::rotate(modelMat, glm::radians(rotation.z), glm::vec3(0.f, 0.0f, 1.0f));
-    }
-    else
-    {
-        modelMat = glm::rotate(modelMat, angle, axis);
-    }
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.y), glm::vec3(0.f, 1.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.z), glm::vec3(0.f, 0.0f, 1.0f));
     shader.set("model", modelMat);
 
-    for(GLuint i = 0; i < meshes.size(); ++i)
-        meshes[i].Draw(shader);
+    Draw(shader);
+}
+
+void Model::DrawSpotLight(Shader& shader, float angle, glm::vec3 axis)
+{
+    shader.use();
+    shader.set("color", color);
+
+    glm::mat4 modelMat(1.f);
+    modelMat = glm::translate(modelMat, location);
+    modelMat = glm::scale(modelMat, scale);
+    modelMat = glm::rotate(modelMat, angle, axis);
+    shader.set("model", modelMat);
+
+    Draw(shader);
+}
+
+void Model::DrawModel(Shader& shader)
+{
+    shader.use();
+    shader.set("isSolidColor", solidColor);
+    shader.set("color", color);
+    shader.set("material.shininess", shininess);
+
+    glm::mat4 modelMat(1.f);
+    modelMat = glm::translate(modelMat, location);
+    modelMat = glm::scale(modelMat, scale);
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.y), glm::vec3(0.f, 1.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(rotation.z), glm::vec3(0.f, 0.0f, 1.0f));
+    shader.set("model", modelMat);
+
+    Draw(shader);
 }
 
 void Model::loadModel(std::string path)

@@ -98,12 +98,18 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 
+	std::vector<Vertex> vertices;
+	vertices.push_back(Vertex{glm::vec3{-1.f, -1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+	vertices.push_back(Vertex{glm::vec3{1.f, -1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+	vertices.push_back(Vertex{glm::vec3{-1.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+	vertices.push_back(Vertex{glm::vec3{1.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+	std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
+	Mesh mesh2d{vertices, indices, std::vector<Texture>()};
+
 	ShadersManager& shadersManager = DATA.shadersManager;
 
 	glViewport(0, 0, (GLsizei)DATA.width, (GLsizei)DATA.height);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -115,6 +121,8 @@ int main(int argc, char ** argv)
 
 	int modelShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment.glsl");
 	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
+	int solidShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment_solid.glsl");
+	int twoDShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_2D.glsl");
 
 	std::vector<Model> models;
 	Model model("nanosuit\\nanosuit.obj");
@@ -124,7 +132,14 @@ int main(int argc, char ** argv)
 	Model sphereModel("shapes\\sphere.nff");
 	sphereModel.solidColor = true;
 	sphereModel.color = {1.f, 0.5f, 0.f};
+	sphereModel.outline = true;
 	models.push_back(sphereModel);
+
+	models.emplace_back("shapes\\cube.nff");
+	models.back().solidColor = true;
+	models.back().color = {0.f, 0.5f, 1.0f};
+	models.back().location = {-2.f, 0.f, 0.f};
+	models.back().outline = true;
 	
 	Model coneModel("shapes\\cone.nff");
 
@@ -142,6 +157,9 @@ int main(int argc, char ** argv)
 		processInput(wnd, dt);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_STENCIL_TEST);
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
 		SetLights(modelShaderID);
 
@@ -152,8 +170,38 @@ int main(int argc, char ** argv)
 		shadersManager.set("viewPos", DATA.camera.Position);
 
 		for(Model& model : models)
-			model.Draw(shadersManager.GetShader(modelShaderID));
-		
+		{
+			if (model.outline)
+			{
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);
+				glStencilMask(0xFF);
+			}
+			else
+			{
+				glStencilMask(0x00);
+			}
+			model.scale = glm::vec3(1.f);
+			model.DrawModel(shadersManager.GetShader(modelShaderID));
+		}
+		for(Model& model : models)
+		{
+			if (!model.outline)
+				continue;
+			
+			// render outline >>>
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
+			glDisable(GL_DEPTH_TEST);
+			model.scale = glm::vec3(1.1f);
+			model.DrawModel(shadersManager.GetShader(solidShaderID));
+			
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+			glEnable(GL_DEPTH_TEST);
+			// render outline <<<
+			
+		}
+
 		for(Light& light : DATA.lights)
 		{
 			if (light.type == 0)
@@ -161,7 +209,7 @@ int main(int argc, char ** argv)
 				sphereModel.location = light.location;
 				sphereModel.color = light.diffuse;
 				sphereModel.scale = {0.1f, 0.1f, 0.1f};
-				sphereModel.Draw(shadersManager.GetShader(lightShaderID), true);
+				sphereModel.DrawPointLight(shadersManager.GetShader(lightShaderID));
 			}
 			else if (light.type == 2)
 			{
@@ -169,9 +217,10 @@ int main(int argc, char ** argv)
 				coneModel.scale = {0.2f, 0.2f, 0.2f};
 				coneModel.location = light.location;
 
-				glm::vec3 axis = glm::cross({0.f, 1.f, 0.f}, glm::normalize(light.direction));
-				float angle = glm::acos(glm::dot({0.f, 1.f, 0.f}, glm::normalize(light.direction)));
-				coneModel.Draw(shadersManager.GetShader(lightShaderID), true, angle, axis);
+				static const glm::vec3 up{0.f, 1.f, 0.f};
+				glm::vec3 axis = glm::cross(up, glm::normalize(light.direction));
+				float angle = glm::acos(glm::dot(up, glm::normalize(light.direction)));
+				coneModel.DrawSpotLight(shadersManager.GetShader(lightShaderID), angle, axis);
 			}
 		}
 
@@ -314,63 +363,71 @@ void DrawGUI()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	{
-		ImGui::Begin("Lights");
-		int i = 0;
-		for(auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
+		ImGui::Begin("Objects", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		if (ImGui::CollapsingHeader("Lights"))
 		{
-			ImGui::PushID(++i);
-			Light& light = *itLight;
-			if (light.type == 0)
+			int i = 0;
+			for(auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
 			{
-				ImGui::Text("Point");
-				ImGui::Indent();
-				ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+				ImGui::PushID(++i);
+				Light& light = *itLight;
+				if (light.type == 0)
+				{
+					ImGui::Text("Point");
+					ImGui::Indent();
+					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+				}
+				else if (light.type == 1)
+				{
+					ImGui::Text("Directional");
+					ImGui::Indent();
+					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+				}
+				else if (light.type == 2)
+				{
+					ImGui::Text("Spot");
+					ImGui::Indent();
+					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+					ImGui::DragFloat("innerCutOff", &light.innerCutOff, 0.001f, 0.f, 1.f);
+					ImGui::DragFloat("outerCutOff", &light.outerCutOff, 0.001f, 0.f, 1.f);
+				}
+				ImGui::ColorEdit3("ambient", (float*)&light.ambient, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("diffuse", (float*)&light.diffuse, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("specular", (float*)&light.specular, ImGuiColorEditFlags_Float);
+				if (ImGui::Button("Delete light"))
+					lightToDelete = itLight;
+
+				ImGui::Unindent();
+				ImGui::PopID();
 			}
-			else if (light.type == 1)
+
+			if (ImGui::Button("AddPointLight"))
 			{
-				ImGui::Text("Directional");
-				ImGui::Indent();
-				ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+				lightTypeToAdd = 0;
 			}
-			else if (light.type == 2)
+			ImGui::SameLine();
+			if (ImGui::Button("AddDirectionalLight"))
 			{
-				ImGui::Text("Spot");
-				ImGui::Indent();
-				ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
-				ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
-				ImGui::DragFloat("innerCutOff", &light.innerCutOff, 0.001f, 0.f, 1.f);
-				ImGui::DragFloat("outerCutOff", &light.outerCutOff, 0.001f, 0.f, 1.f);
+				lightTypeToAdd = 1;
 			}
-			ImGui::ColorEdit3("ambient", (float*)&light.ambient, ImGuiColorEditFlags_Float);
-			ImGui::ColorEdit3("diffuse", (float*)&light.diffuse, ImGuiColorEditFlags_Float);
-			ImGui::ColorEdit3("specular", (float*)&light.specular, ImGuiColorEditFlags_Float);
-			if (ImGui::Button("Delete light"))
-				lightToDelete = itLight;
+			ImGui::SameLine();
+			if (ImGui::Button("AddSpotLight"))
+			{
+				lightTypeToAdd = 2;
+			}
 
-			ImGui::Unindent();
-			ImGui::PopID();
-		}
-
-		if (ImGui::Button("AddPointLight"))
-		{
-			lightTypeToAdd = 0;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("AddDirectionalLight"))
-		{
-			lightTypeToAdd = 1;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("AddSpotLight"))
-		{
-			lightTypeToAdd = 2;
+			/*
+			std::stringstream sstr;
+			sstr << "lastX: " << DATA.lastX << "  lastY: " << DATA.lastY;
+			ImGui::Text(sstr.str().c_str());
+			*/
 		}
 
-		/*
-		std::stringstream sstr;
-		sstr << "lastX: " << DATA.lastX << "  lastY: " << DATA.lastY;
-		ImGui::Text(sstr.str().c_str());
-		*/
+		if (ImGui::CollapsingHeader("Models"))
+		{
+			ImGui::Text("Some models...");
+		}
 
 		ImGui::End();
 	}

@@ -14,10 +14,12 @@ class Shader;
 class Model
 {
 public:
-    Model(char *path) {
+    Model(const char *path) {
         loadModel(path);
     }
-    void Draw(Shader& shader, bool light = false, float angle = 0.f, glm::vec3 axis = {0.f, 0.f, 0.f});
+    void DrawPointLight(Shader& shader);
+    void DrawSpotLight(Shader& shader, float angle, glm::vec3 axis);
+    void DrawModel(Shader& shader);
     
     glm::vec3 location{0.f};
     glm::vec3 rotation{0.f};
@@ -28,10 +30,14 @@ public:
 
     float shininess = 32.f;
 
+    bool outline = false;
+
 private:
     std::vector<Texture> textures_loaded;
     std::vector<Mesh> meshes;
     std::string directory;
+    
+    void Draw(Shader& shader);
 
     void loadModel(std::string path);
     void processNode(aiNode *node, const aiScene *scene);
