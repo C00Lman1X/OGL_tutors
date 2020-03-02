@@ -170,6 +170,8 @@ int main(int argc, char ** argv)
 	DATA.models.back().ChangeName("grass");
 	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.5f, 0.05f,-0.6f});
 	DATA.models.back().ChangeName("grass");
+
+	DATA.models.emplace_back("shapes\\textured_cube.nff", modelShaderID);
 	
 	Light dirLight;
 	dirLight.type = 1;

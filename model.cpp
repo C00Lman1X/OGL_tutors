@@ -198,6 +198,12 @@ GLuint TextureFromFile(const char *path, const std::string& directory, bool gamm
 
 	int width, height, nrComponents;
 	GLubyte *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+    if (!data)
+    {
+        filename = path;
+        filename = "textures/" + filename;
+        data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+    }
 	if (data)
 	{
 		GLenum format;
