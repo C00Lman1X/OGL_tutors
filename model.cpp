@@ -1,4 +1,5 @@
 #include "model.h"
+#include "mesh.h"
 #include "shader.h"
 #include "stb_image.h"
 #include "globalData.h"
@@ -92,10 +93,18 @@ void Model::loadModel(std::string path)
 
 void Model::processNode(aiNode *node, const aiScene *scene)
 {
+    glm::mat3 scaleMat{1.f};
+    for(int i = 0; i < 3; ++i)
+    {
+        if (node->mTransformation[i][i] != 1.f)
+        {
+            scaleMat[i][i] = node->mTransformation[i][i];
+        }
+    }
     for(GLuint i = 0; i < node->mNumMeshes; ++i)
     {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(processMesh(mesh, scene));
+        meshes.push_back(processMesh(mesh, scene, scaleMat));
     }
 
     for(GLuint i = 0; i < node->mNumChildren; ++i)
@@ -104,7 +113,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
     }
 }
 
-Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
+Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene, glm::mat3 scale/* = glm::mat3{1.f}*/)
 {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
@@ -115,6 +124,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         Vertex vertex;
 
         vertex.Position = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
+        vertex.Position = scale * vertex.Position;
         vertex.Normal = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
         if (mesh->mTextureCoords[0])
             vertex.TexCoords = {mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y};

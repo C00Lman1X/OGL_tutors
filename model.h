@@ -53,7 +53,7 @@ private:
 
     void loadModel(std::string path);
     void processNode(aiNode *node, const aiScene *scene);
-    Mesh processMesh(aiMesh *mesh, const aiScene *scene);
+    Mesh processMesh(aiMesh *mesh, const aiScene *scene, glm::mat3 scale = glm::mat3{1.f});
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
 
     static int NEXT_ID;

@@ -143,7 +143,7 @@ int main(int argc, char ** argv)
 	Model sphereModel("shapes\\sphere.nff", modelShaderID);
 	sphereModel.solidColor = true;
 	sphereModel.color = {1.f, 0.5f, 0.f};
-	sphereModel.location = {0.f, 1.03f, -5.f};
+	sphereModel.location = {0.f, 1.05f, -5.f};
 	sphereModel.outline = true;
 	DATA.models.push_back(sphereModel);
 
@@ -157,18 +157,18 @@ int main(int argc, char ** argv)
 	DATA.models.emplace_back("shapes\\cube.nff", modelShaderID);
 	DATA.models.back().solidColor = true;
 	DATA.models.back().color = {0.f, 0.5f, 1.0f};
-	DATA.models.back().location = {-2.f, 0.56f, -5.f};
+	DATA.models.back().location = {-2.f, 1.05f, -5.f};
 	DATA.models.back().outline = true;
 
-	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{-1.5f, 0.03f, -1.48f});
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{-1.5f, 0.05f, -1.48f});
 	DATA.models.back().ChangeName("grass");
-	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{1.5f, 0.03f, 1.51f});
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{1.5f, 0.05f, 1.51f});
 	DATA.models.back().ChangeName("grass");
-	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.0f, 0.03f, 0.7f});
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.0f, 0.05f, 0.7f});
 	DATA.models.back().ChangeName("grass");
-	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{-0.3f, 0.03f,-2.3f});
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{-0.3f, 0.05f,-2.3f});
 	DATA.models.back().ChangeName("grass");
-	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.5f, 0.03f,-0.6f});
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.5f, 0.05f,-0.6f});
 	DATA.models.back().ChangeName("grass");
 	
 	Light dirLight;
