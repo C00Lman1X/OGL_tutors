@@ -14,16 +14,23 @@ class Shader;
 class Model
 {
 public:
-    Model(const char *path) {
+    Model(const char *path, int shaderId) {
         loadModel(path);
+        std::string sPath{path};
+        size_t pos = sPath.find_last_of('\\') + 1;
+        size_t count = sPath.find_last_of('.') - pos;
+        name = std::to_string(NEXT_ID++) + "_" + sPath.substr(pos, count);
+
+        shaderID = shaderId;
     }
-    void DrawPointLight(Shader& shader);
-    void DrawSpotLight(Shader& shader, float angle, glm::vec3 axis);
-    void DrawModel(Shader& shader);
+    Model(const Mesh& mesh, int shaderId, glm::vec3 location_ = {0.f, 0.f, 0.f}, glm::vec3 scale_ = {1.f, 1.f, 1.f}, glm::vec3 rotation_ = {0.f, 0.f, 0.f});
+    void DrawPointLight();
+    void DrawSpotLight(float angle, glm::vec3 axis);
+    void DrawModel();
     
     glm::vec3 location{0.f};
-    glm::vec3 rotation{0.f};
     glm::vec3 scale{1.f};
+    glm::vec3 rotation{0.f};
 
     bool solidColor = false;
     glm::vec3 color{0.f, 0.f, 0.f};
@@ -31,11 +38,16 @@ public:
     float shininess = 32.f;
 
     bool outline = false;
+    int shaderID = 0;
+
+    const std::string& GetName() const { return name; }
+    void ChangeName(const std::string& newName);
 
 private:
     std::vector<Texture> textures_loaded;
     std::vector<Mesh> meshes;
     std::string directory;
+    std::string name;
     
     void Draw(Shader& shader);
 
@@ -43,6 +55,8 @@ private:
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
+
+    static int NEXT_ID;
 };
 
 GLuint TextureFromFile(const char *path, const std::string& directory, bool gamma = false);

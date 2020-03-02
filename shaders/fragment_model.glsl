@@ -1,7 +1,7 @@
 #version 330 core
 struct Material {
-	sampler2D texture_diffuse;
-	sampler2D texture_specular;
+	sampler2D texture_diffuse1;
+	sampler2D texture_specular1;
 	float shininess;
 };
 
@@ -15,6 +15,9 @@ uniform Material material;
 
 void main()
 {	
-	FragColor = vec4(vec3(texture(material.texture_diffuse, TexCoords)), 1.0);
-    //FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+	vec4 texColor = texture(material.texture_diffuse1, TexCoords);
+	if (texColor.a < 0.1)
+		discard;
+	FragColor = texColor;
+    //FragColor = vec4(0.5216, 0.1176, 0.1176, 1.0);
 }

@@ -48,8 +48,8 @@ public:
     bool drawLight = true;
     Camera camera;
 
-    float width = 640.f;
-    float height = 480.f;
+    float width = 1280.f;
+    float height = 720.f;
 
     // cursor processing
     bool cursorCaptured = false;
@@ -58,6 +58,7 @@ public:
     static const glm::vec3 DEFAULT_CAMERA_POS;
 
     ShadersManager shadersManager;
+    std::vector<Model> models;
 
 private:
     GlobalData()

@@ -4,14 +4,28 @@
 #include "globalData.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+int Model::NEXT_ID = 0;
+
+Model::Model(const Mesh& mesh, int shaderId, glm::vec3 location_/* = {0.f, 0.f, 0.f}*/, glm::vec3 scale_/* = {1.f, 1.f, 1.f}*/, glm::vec3 rotation_/* = {0.f, 0.f, 0.f}*/)
+    : location(location_)
+    , scale(scale_)
+    , rotation(rotation_)
+    , shaderID(shaderId)
+{
+    meshes.push_back(std::move(mesh));
+
+    name = std::to_string(NEXT_ID++) + "_";
+}
+
 void Model::Draw(Shader& shader)
 {
     for(GLuint i = 0; i < meshes.size(); ++i)
         meshes[i].Draw(shader);
 }
 
-void Model::DrawPointLight(Shader& shader)
+void Model::DrawPointLight()
 {
+    Shader& shader = DATA.shadersManager.GetShader(shaderID);
     shader.use();
     shader.set("color", color);
 
@@ -26,8 +40,9 @@ void Model::DrawPointLight(Shader& shader)
     Draw(shader);
 }
 
-void Model::DrawSpotLight(Shader& shader, float angle, glm::vec3 axis)
+void Model::DrawSpotLight(float angle, glm::vec3 axis)
 {
+    Shader& shader = DATA.shadersManager.GetShader(shaderID);
     shader.use();
     shader.set("color", color);
 
@@ -40,8 +55,9 @@ void Model::DrawSpotLight(Shader& shader, float angle, glm::vec3 axis)
     Draw(shader);
 }
 
-void Model::DrawModel(Shader& shader)
+void Model::DrawModel()
 {
+    Shader& shader = DATA.shadersManager.GetShader(shaderID);
     shader.use();
     shader.set("isSolidColor", solidColor);
     shader.set("color", color);
@@ -157,6 +173,11 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
     return textures;
 }
 
+void Model::ChangeName(const std::string& newName)
+{
+    name = name.substr(0, name.find_first_of('_') + 1) + newName;
+}
+
 GLuint TextureFromFile(const char *path, const std::string& directory, bool gamma/* = false*/)
 {
     std::string filename(path);
@@ -181,8 +202,8 @@ GLuint TextureFromFile(const char *path, const std::string& directory, bool gamm
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

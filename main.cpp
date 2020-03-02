@@ -16,7 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "globalData.h"
-const glm::vec3 GlobalData::DEFAULT_CAMERA_POS{0.f, 0.f, 3.f};
+const glm::vec3 GlobalData::DEFAULT_CAMERA_POS{0.f, 1.5f, 3.f};
 
 void processInput(GLFWwindow *window, float dt);
 void mouse_callback(GLFWwindow *window, double x, double y);
@@ -41,6 +41,9 @@ void framebuffer_size_callback(GLFWwindow* wnd, int width, int height)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	if (ImGui::GetIO().WantCaptureKeyboard)
+		return;
+
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
@@ -99,12 +102,17 @@ int main(int argc, char ** argv)
 	}
 
 	std::vector<Vertex> vertices;
-	vertices.push_back(Vertex{glm::vec3{-1.f, -1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
-	vertices.push_back(Vertex{glm::vec3{1.f, -1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
-	vertices.push_back(Vertex{glm::vec3{-1.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
-	vertices.push_back(Vertex{glm::vec3{1.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+	vertices.push_back(Vertex{glm::vec3{0.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 1.f}});
+	vertices.push_back(Vertex{glm::vec3{1.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 1.f}});
+	vertices.push_back(Vertex{glm::vec3{0.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+	vertices.push_back(Vertex{glm::vec3{1.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 0.f}});
 	std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
-	Mesh mesh2d{vertices, indices, std::vector<Texture>()};
+	
+	Texture texture;
+	texture.id = TextureFromFile("grass.png", "textures");
+	texture.type = "texture_diffuse";
+
+	Mesh grassMesh{vertices, indices, std::vector<Texture>{texture}};
 
 	ShadersManager& shadersManager = DATA.shadersManager;
 
@@ -122,30 +130,51 @@ int main(int argc, char ** argv)
 	int modelShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment.glsl");
 	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 	int solidShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment_solid.glsl");
-	int twoDShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_2D.glsl");
+	int textureShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_model.glsl");
+	
+	Model spotLightModel("shapes\\cone.nff", lightShaderID);
+	Model pointLightModel("shapes\\cone.nff", lightShaderID);
 
-	std::vector<Model> models;
-	Model model("nanosuit\\nanosuit.obj");
+	// Scene description >>>
+	Model model("nanosuit\\nanosuit.obj", modelShaderID);
 	model.location = {0.f, 0.f, -3.f};
-	models.push_back(model);
+	DATA.models.push_back(model);
 
-	Model sphereModel("shapes\\sphere.nff");
+	Model sphereModel("shapes\\sphere.nff", modelShaderID);
 	sphereModel.solidColor = true;
 	sphereModel.color = {1.f, 0.5f, 0.f};
+	sphereModel.location = {0.f, 1.03f, -5.f};
 	sphereModel.outline = true;
-	models.push_back(sphereModel);
+	DATA.models.push_back(sphereModel);
 
-	models.emplace_back("shapes\\cube.nff");
-	models.back().solidColor = true;
-	models.back().color = {0.f, 0.5f, 1.0f};
-	models.back().location = {-2.f, 0.f, 0.f};
-	models.back().outline = true;
+	Model floor("shapes\\cube.nff", modelShaderID);
+	floor.solidColor = true;
+	floor.color = {0.3f, 0.3f, 0.3f};
+	floor.scale = {50.f, 0.05f, 50.f};
+	floor.ChangeName("floor");
+	DATA.models.push_back(floor);
+
+	DATA.models.emplace_back("shapes\\cube.nff", modelShaderID);
+	DATA.models.back().solidColor = true;
+	DATA.models.back().color = {0.f, 0.5f, 1.0f};
+	DATA.models.back().location = {-2.f, 0.56f, -5.f};
+	DATA.models.back().outline = true;
+
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{-1.5f, 0.03f, -1.48f});
+	DATA.models.back().ChangeName("grass");
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{1.5f, 0.03f, 1.51f});
+	DATA.models.back().ChangeName("grass");
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.0f, 0.03f, 0.7f});
+	DATA.models.back().ChangeName("grass");
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{-0.3f, 0.03f,-2.3f});
+	DATA.models.back().ChangeName("grass");
+	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.5f, 0.03f,-0.6f});
+	DATA.models.back().ChangeName("grass");
 	
-	Model coneModel("shapes\\cone.nff");
-
 	Light dirLight;
 	dirLight.type = 1;
 	DATA.lights.push_back(dirLight);
+	// Scene description <<<
 
 	float dt = 0.f;
 	float lastFrame = 0.f;
@@ -169,7 +198,7 @@ int main(int argc, char ** argv)
 		shadersManager.set("projection", projection);
 		shadersManager.set("viewPos", DATA.camera.Position);
 
-		for(Model& model : models)
+		for(Model& model : DATA.models)
 		{
 			if (model.outline)
 			{
@@ -180,10 +209,10 @@ int main(int argc, char ** argv)
 			{
 				glStencilMask(0x00);
 			}
-			model.scale = glm::vec3(1.f);
-			model.DrawModel(shadersManager.GetShader(modelShaderID));
+			model.DrawModel();
 		}
-		for(Model& model : models)
+
+		for(Model& model : DATA.models)
 		{
 			if (!model.outline)
 				continue;
@@ -192,35 +221,42 @@ int main(int argc, char ** argv)
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 			glStencilMask(0x00);
 			glDisable(GL_DEPTH_TEST);
-			model.scale = glm::vec3(1.1f);
-			model.DrawModel(shadersManager.GetShader(solidShaderID));
+			
+			auto tmpScale = model.scale;
+			auto tmpShader = model.shaderID;
+			model.scale = tmpScale * 1.05f;
+			model.shaderID = solidShaderID;
+			
+			model.DrawModel();
+			
+			model.scale = tmpScale;
+			model.shaderID = tmpShader;
 			
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
-			// render outline <<<
-			
+			// render outline <<<	
 		}
 
 		for(Light& light : DATA.lights)
 		{
 			if (light.type == 0)
 			{
-				sphereModel.location = light.location;
-				sphereModel.color = light.diffuse;
-				sphereModel.scale = {0.1f, 0.1f, 0.1f};
-				sphereModel.DrawPointLight(shadersManager.GetShader(lightShaderID));
+				pointLightModel.location = light.location;
+				pointLightModel.color = light.diffuse;
+				pointLightModel.scale = {0.1f, 0.1f, 0.1f};
+				pointLightModel.DrawPointLight();
 			}
 			else if (light.type == 2)
 			{
-				coneModel.color = light.diffuse;
-				coneModel.scale = {0.2f, 0.2f, 0.2f};
-				coneModel.location = light.location;
+				spotLightModel.color = light.diffuse;
+				spotLightModel.scale = {0.2f, 0.2f, 0.2f};
+				spotLightModel.location = light.location;
 
 				static const glm::vec3 up{0.f, 1.f, 0.f};
 				glm::vec3 axis = glm::cross(up, glm::normalize(light.direction));
 				float angle = glm::acos(glm::dot(up, glm::normalize(light.direction)));
-				coneModel.DrawSpotLight(shadersManager.GetShader(lightShaderID), angle, axis);
+				spotLightModel.DrawSpotLight(angle, axis);
 			}
 		}
 
@@ -281,6 +317,9 @@ void mouse_callback(GLFWwindow *window, double x, double y)
 
 void scroll_callback(GLFWwindow *window, double dx, double dy)
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
+
 	DATA.camera.ProcessMouseScroll((float)dy);
 }
 
@@ -426,8 +465,30 @@ void DrawGUI()
 
 		if (ImGui::CollapsingHeader("Models"))
 		{
-			ImGui::Text("Some models...");
+			int imGuiID = 0;
+			std::vector<Model> allModels{DATA.models};
+			for(Model& model : DATA.models)
+			{
+				ImGui::PushID(++imGuiID);
+				ImGui::Text(model.GetName().c_str());
+				ImGui::Indent();
+
+				ImGui::DragFloat3("location", (float*)&model.location, 0.01f);
+				ImGui::DragFloat3("scale", (float*)&model.scale, 0.01f);
+				ImGui::DragFloat3("rotation", (float*)&model.rotation, 0.01f);
+				if (model.solidColor)
+					ImGui::ColorEdit3("color", (float*)&model.color, ImGuiColorEditFlags_Float);
+				ImGui::Checkbox("Outline", &model.outline);
+				ImGui::SetNextItemWidth(100.f);
+				ImGui::SameLine(); ImGui::DragFloat("Shininess", &model.shininess);
+
+				ImGui::Unindent();
+				ImGui::PopID();
+			}
 		}
+
+		ImGui::Text("Camera at (%.3f, %.3f, %.3f)", DATA.camera.Position.x, DATA.camera.Position.y, DATA.camera.Position.z);
+		ImGui::Indent(); ImGui::Text("looking at (%.3f, %.3f, %.3f)", DATA.camera.Front.x, DATA.camera.Front.y, DATA.camera.Front.z); ImGui::Unindent(); 
 
 		ImGui::End();
 	}
