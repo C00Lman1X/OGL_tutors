@@ -129,11 +129,11 @@ int main(int argc, char ** argv)
 
 	int modelShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment.glsl");
 	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
-	int solidShaderID = shadersManager.CreateShader("shaders/vertex.glsl", "shaders/fragment_solid.glsl");
+	int solidShaderID = shadersManager.CreateShader("shaders/vertex_solid.glsl", "shaders/fragment_solid.glsl");
 	int textureShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_model.glsl");
 	
 	Model spotLightModel("shapes\\cone.nff", lightShaderID);
-	Model pointLightModel("shapes\\cone.nff", lightShaderID);
+	Model pointLightModel("shapes\\sphere.nff", lightShaderID);
 
 	// Scene description >>>
 	Model model("nanosuit\\nanosuit.obj", modelShaderID);
@@ -222,14 +222,11 @@ int main(int argc, char ** argv)
 			glStencilMask(0x00);
 			glDisable(GL_DEPTH_TEST);
 			
-			auto tmpScale = model.scale;
 			auto tmpShader = model.shaderID;
-			model.scale = tmpScale * 1.05f;
 			model.shaderID = solidShaderID;
 			
 			model.DrawModel();
 			
-			model.scale = tmpScale;
 			model.shaderID = tmpShader;
 			
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
