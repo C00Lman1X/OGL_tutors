@@ -14,12 +14,14 @@ class Shader;
 class Model
 {
 public:
-    Model(const char *path, int shaderId) {
+    Model(const char *path, int shaderId)
+        : ID(NEXT_ID++)
+    {
         loadModel(path);
         std::string sPath{path};
         size_t pos = sPath.find_last_of('/') + 1;
         size_t count = sPath.find_last_of('.') - pos;
-        name = std::to_string(NEXT_ID++) + "_" + sPath.substr(pos, count);
+        name = std::to_string(ID) + "_" + sPath.substr(pos, count);
 
         shaderID = shaderId;
     }
@@ -33,12 +35,14 @@ public:
     glm::vec3 rotation{0.f};
 
     bool solidColor = false;
-    glm::vec3 color{0.f, 0.f, 0.f};
+    glm::vec4 color{0.f, 0.f, 0.f, 1.f};
 
     float shininess = 32.f;
 
     bool outline = false;
+    bool opaque = false;
     int shaderID = 0;
+    int ID = 0;
 
     const std::string& GetName() const { return name; }
     void ChangeName(const std::string& newName);

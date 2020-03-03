@@ -12,10 +12,11 @@ Model::Model(const Mesh& mesh, int shaderId, glm::vec3 location_/* = {0.f, 0.f, 
     , scale(scale_)
     , rotation(rotation_)
     , shaderID(shaderId)
+    , ID(NEXT_ID++)
 {
     meshes.push_back(std::move(mesh));
 
-    name = std::to_string(NEXT_ID++) + "_";
+    name = std::to_string(ID) + "_";
 }
 
 void Model::Draw(Shader& shader)
@@ -63,6 +64,7 @@ void Model::DrawModel()
     shader.set("isSolidColor", solidColor);
     shader.set("color", color);
     shader.set("material.shininess", shininess);
+    shader.set("opaque", opaque);
 
     glm::mat4 modelMat(1.f);
     modelMat = glm::translate(modelMat, location);
@@ -185,7 +187,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
 
 void Model::ChangeName(const std::string& newName)
 {
-    name = name.substr(0, name.find_first_of('_') + 1) + newName;
+    name = std::to_string(ID) + '_' + newName;
 }
 
 GLuint TextureFromFile(const char *path, const std::string& directory, bool gamma/* = false*/)

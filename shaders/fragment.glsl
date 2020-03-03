@@ -119,7 +119,8 @@ in vec2 TexCoords;
 uniform vec3 viewPos;
 uniform Material material;
 uniform bool isSolidColor;
-uniform vec3 color;
+uniform vec4 color;
+uniform bool opaque;
 
 void main()
 {
@@ -130,12 +131,18 @@ void main()
 	sMaterial.diffuse = texture(material.texture_diffuse1, TexCoords);
 	sMaterial.specular = texture(material.texture_specular1, TexCoords);
 	sMaterial.shininess = material.shininess;
+	
+	float alpha = sMaterial.diffuse.a;
 
 	if (isSolidColor)
 	{
-		sMaterial.diffuse = vec4(color, 1.0);
-		sMaterial.specular = vec4(color, 1.0);
+		sMaterial.diffuse = color;
+		sMaterial.specular = color;
+		alpha = color.a;
 	}
+
+	if (opaque)
+		alpha = 1.0;
 
 	vec3 result = vec3(0.0, 0.0, 0.0);
 	for(int i = 0; i < NR_DIR_LIGHTS; i++)
@@ -157,6 +164,6 @@ void main()
 		result += CalcSpotLight(spotLights[i], FragPos, sMaterial);
 	}
 	
-	FragColor = vec4(result, 1.0);
+	FragColor = vec4(result, alpha);
 	//FragColor = vec4(sMaterial.diffuse);
 }

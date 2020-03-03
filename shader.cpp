@@ -119,6 +119,12 @@ void Shader::set(const std::string &name, const glm::vec3 &vec) const
     glUniform3f(loc, vec.x, vec.y, vec.z);
 }
 
+void Shader::set(const std::string &name, const glm::vec4 &vec) const
+{
+    GLint loc = getUniformLoc(name);
+    glUniform4f(loc, vec.x, vec.y, vec.z, vec.w);
+}
+
 void Shader::set(const std::string &name, const glm::mat4 &mat) const
 {
     GLint loc = getUniformLoc(name);

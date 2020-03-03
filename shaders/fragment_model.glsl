@@ -16,8 +16,6 @@ uniform Material material;
 void main()
 {	
 	vec4 texColor = texture(material.texture_diffuse1, TexCoords);
-	if (texColor.a < 0.1)
-		discard;
 	FragColor = texColor;
     //FragColor = vec4(0.5216, 0.1176, 0.1176, 1.0);
 }

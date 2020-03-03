@@ -57,8 +57,11 @@ public:
 
     static const glm::vec3 DEFAULT_CAMERA_POS;
 
+    int FLOOR_ID = 0;
+
     ShadersManager shadersManager;
-    std::vector<Model> models;
+    std::vector<Model*> models;
+    std::vector<Model*> unsortedModels;
 
 private:
     GlobalData()
