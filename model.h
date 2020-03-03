@@ -17,7 +17,7 @@ public:
     Model(const char *path, int shaderId) {
         loadModel(path);
         std::string sPath{path};
-        size_t pos = sPath.find_last_of('\\') + 1;
+        size_t pos = sPath.find_last_of('/') + 1;
         size_t count = sPath.find_last_of('.') - pos;
         name = std::to_string(NEXT_ID++) + "_" + sPath.substr(pos, count);
 

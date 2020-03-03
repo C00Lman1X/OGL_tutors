@@ -132,29 +132,29 @@ int main(int argc, char ** argv)
 	int solidShaderID = shadersManager.CreateShader("shaders/vertex_solid.glsl", "shaders/fragment_solid.glsl");
 	int textureShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_model.glsl");
 	
-	Model spotLightModel("shapes\\cone.nff", lightShaderID);
-	Model pointLightModel("shapes\\sphere.nff", lightShaderID);
+	Model spotLightModel("shapes/cone.nff", lightShaderID);
+	Model pointLightModel("shapes/sphere.nff", lightShaderID);
 
 	// Scene description >>>
-	Model model("nanosuit\\nanosuit.obj", modelShaderID);
+	Model model("nanosuit/nanosuit.obj", modelShaderID);
 	model.location = {0.f, 0.f, -3.f};
 	DATA.models.push_back(model);
 
-	Model sphereModel("shapes\\sphere.nff", modelShaderID);
+	Model sphereModel("shapes/sphere.nff", modelShaderID);
 	sphereModel.solidColor = true;
 	sphereModel.color = {1.f, 0.5f, 0.f};
 	sphereModel.location = {0.f, 1.05f, -5.f};
 	sphereModel.outline = true;
 	DATA.models.push_back(sphereModel);
 
-	Model floor("shapes\\cube.nff", modelShaderID);
+	Model floor("shapes/cube.nff", modelShaderID);
 	floor.solidColor = true;
 	floor.color = {0.3f, 0.3f, 0.3f};
 	floor.scale = {50.f, 0.05f, 50.f};
 	floor.ChangeName("floor");
 	DATA.models.push_back(floor);
 
-	DATA.models.emplace_back("shapes\\cube.nff", modelShaderID);
+	DATA.models.emplace_back("shapes/cube.nff", modelShaderID);
 	DATA.models.back().solidColor = true;
 	DATA.models.back().color = {0.f, 0.5f, 1.0f};
 	DATA.models.back().location = {-2.f, 1.05f, -5.f};
@@ -171,7 +171,7 @@ int main(int argc, char ** argv)
 	DATA.models.emplace_back(grassMesh, textureShaderID, glm::vec3{0.5f, 0.05f,-0.6f});
 	DATA.models.back().ChangeName("grass");
 
-	DATA.models.emplace_back("shapes\\textured_cube.nff", modelShaderID);
+	DATA.models.emplace_back("shapes/textured_cube.nff", modelShaderID);
 	
 	Light dirLight;
 	dirLight.type = 1;
@@ -469,7 +469,7 @@ void DrawGUI()
 			for(Model& model : DATA.models)
 			{
 				ImGui::PushID(++imGuiID);
-				ImGui::Text(model.GetName().c_str());
+				ImGui::Text("%s", model.GetName().c_str());
 				ImGui::Indent();
 
 				ImGui::DragFloat3("location", (float*)&model.location, 0.01f);
