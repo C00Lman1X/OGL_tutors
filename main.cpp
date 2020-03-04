@@ -172,6 +172,7 @@ int main(int argc, char ** argv)
 	DATA.models.emplace_back(new Model{"shapes/textured_cube.nff", modelShaderID});
 	DATA.models.back()->SetLocation({0.f, 1.f, 0.f});
 	DATA.models.back()->transparentCube = true;
+	DATA.models.back()->SortFaces();
 
 	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{-1.5f, 0.05f, -1.48f}});
 	DATA.models.back()->ChangeName("window");

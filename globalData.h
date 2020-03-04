@@ -60,8 +60,8 @@ public:
     int FLOOR_ID = 0;
 
     ShadersManager shadersManager;
-    std::vector<Model*> models;
-    std::vector<Model*> unsortedModels;
+    std::vector<class Model*> models;
+    std::vector<class Model*> unsortedModels;
 
 private:
     GlobalData()
