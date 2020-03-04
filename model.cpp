@@ -7,6 +7,27 @@
 
 int Model::NEXT_ID = 0;
 
+void Model::SetLocation(const glm::vec3& location)
+{
+    this->location = location;
+    if (transparentCube)
+        SortFaces();
+}
+
+void Model::SetScale(const glm::vec3& scale)
+{
+    this->scale = scale;
+    if (transparentCube)
+        SortFaces();
+}
+
+void Model::SetRotation(const glm::vec3& rotation)
+{
+    this->rotation = rotation;
+    if (transparentCube)
+        SortFaces();
+}
+
 Model::Model(const Mesh& mesh, int shaderId, glm::vec3 location_/* = {0.f, 0.f, 0.f}*/, glm::vec3 scale_/* = {1.f, 1.f, 1.f}*/, glm::vec3 rotation_/* = {0.f, 0.f, 0.f}*/)
     : location(location_)
     , scale(scale_)
@@ -31,7 +52,7 @@ void Model::DrawPointLight()
     shader.use();
     shader.set("color", color);
 
-    glm::mat4 modelMat(1.f);
+    modelMat = glm::mat4{1.f};
     modelMat = glm::translate(modelMat, location);
     modelMat = glm::scale(modelMat, scale);
     modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
@@ -48,7 +69,7 @@ void Model::DrawSpotLight(float angle, glm::vec3 axis)
     shader.use();
     shader.set("color", color);
 
-    glm::mat4 modelMat(1.f);
+    modelMat = glm::mat4{1.f};
     modelMat = glm::translate(modelMat, location);
     modelMat = glm::scale(modelMat, scale);
     modelMat = glm::rotate(modelMat, angle, axis);
@@ -66,7 +87,7 @@ void Model::DrawModel()
     shader.set("material.shininess", shininess);
     shader.set("opaque", opaque);
 
-    glm::mat4 modelMat(1.f);
+    modelMat = glm::mat4{1.f};
     modelMat = glm::translate(modelMat, location);
     modelMat = glm::scale(modelMat, scale);
     modelMat = glm::rotate(modelMat, glm::radians(rotation.x), glm::vec3(1.f, 0.0f, 0.0f));
@@ -234,4 +255,31 @@ GLuint TextureFromFile(const char *path, const std::string& directory, bool gamm
 	}
 
 	return textureID;
+}
+
+void Model::SortFaces()
+{
+    Mesh& cubeMesh = meshes[0];
+    const size_t facesCount = 6;
+    const size_t faceIndicesCount = cubeMesh.indices.size() / facesCount;
+    std::vector<std::pair<bool, size_t>> sortedFaces;
+    for(size_t face = 0; face < facesCount; ++face)
+    {
+        const size_t firstIndexOfFace = face*facesCount;
+        const glm::vec3 faceNorm = glm::mat3(glm::transpose(glm::inverse(modelMat))) * cubeMesh.vertices[firstIndexOfFace].Normal;
+        const glm::vec3 vertexWorldPosition = glm::vec3{modelMat * glm::vec4{cubeMesh.vertices[firstIndexOfFace].Position, 1.f}};
+        const glm::vec3 dirToCam = glm::normalize(DATA.camera.Position - vertexWorldPosition);
+        bool lookToCam = glm::dot(faceNorm, dirToCam) >= 0.f;
+        sortedFaces.emplace_back(lookToCam, face);
+    }
+    std::sort(sortedFaces.begin(), sortedFaces.end(), [](const std::pair<bool, size_t>& p1, const std::pair<bool, size_t>& p2) {
+        return p1.first < p2.first;
+    });
+
+    cubeMesh.indices.clear();
+    for(auto& p : sortedFaces)
+    {
+        for(size_t i = 0; i < faceIndicesCount; ++i)
+            cubeMesh.indices.push_back(GLuint(p.second * faceIndicesCount + i));
+    }
 }

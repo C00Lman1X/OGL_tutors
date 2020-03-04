@@ -110,10 +110,10 @@ int main(int argc, char ** argv)
 	std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
 	
 	Texture texture;
-	texture.id = TextureFromFile("grass.png", "textures");
+	texture.id = TextureFromFile("blending_transparent_window.png", "textures");
 	texture.type = "texture_diffuse";
 
-	Mesh grassMesh{vertices, indices, std::vector<Texture>{texture}};
+	Mesh mesh2D{vertices, indices, std::vector<Texture>{texture}};
 
 	ShadersManager& shadersManager = DATA.shadersManager;
 
@@ -139,6 +139,7 @@ int main(int argc, char ** argv)
 	Model pointLightModel("shapes/sphere.nff", lightShaderID);
 
 	// Scene description >>>
+	/*
 	Model model("nanosuit/nanosuit.obj", modelShaderID);
 	model.location = {0.f, 0.f, -3.f};
 	model.opaque = true;
@@ -151,14 +152,6 @@ int main(int argc, char ** argv)
 	sphereModel.outline = true;
 	DATA.models.push_back(&sphereModel);
 
-	Model floor("shapes/cube.nff", modelShaderID);
-	floor.solidColor = true;
-	floor.color = {0.3f, 0.3f, 0.3f, 1.f};
-	floor.scale = {50.f, 0.05f, 50.f};
-	floor.ChangeName("floor");
-	DATA.FLOOR_ID = floor.ID;
-	DATA.models.push_back(&floor);
-
 	Model cube{"shapes/cube.nff", modelShaderID};
 	DATA.models.push_back(&cube);
 	DATA.models.back()->solidColor = true;
@@ -166,19 +159,30 @@ int main(int argc, char ** argv)
 	DATA.models.back()->location = {-2.f, 1.05f, -5.f};
 	DATA.models.back()->outline = true;
 
-	DATA.models.emplace_back(new Model{grassMesh, textureShaderID, glm::vec3{-1.5f, 0.05f, -1.48f}});
-	DATA.models.back()->ChangeName("grass");
-	DATA.models.emplace_back(new Model{grassMesh, textureShaderID, glm::vec3{1.5f, 0.05f, 1.51f}});
-	DATA.models.back()->ChangeName("grass");
-	DATA.models.emplace_back(new Model{grassMesh, textureShaderID, glm::vec3{0.0f, 0.05f, 0.7f}});
-	DATA.models.back()->ChangeName("grass");
-	DATA.models.emplace_back(new Model{grassMesh, textureShaderID, glm::vec3{-0.3f, 0.05f,-2.3f}});
-	DATA.models.back()->ChangeName("grass");
-	DATA.models.emplace_back(new Model{grassMesh, textureShaderID, glm::vec3{0.5f, 0.05f,-0.6f}});
-	DATA.models.back()->ChangeName("grass");
+	*/
 
+	Model floor("shapes/cube.nff", modelShaderID);
+	floor.solidColor = true;
+	floor.color = {0.3f, 0.3f, 0.3f, 1.f};
+	floor.SetScale({50.f, 0.05f, 50.f});
+	floor.ChangeName("floor");
+	DATA.FLOOR_ID = floor.ID;
+	DATA.models.push_back(&floor);
+	
 	DATA.models.emplace_back(new Model{"shapes/textured_cube.nff", modelShaderID});
-	DATA.models.back()->location = {0.f, 1.f, 0.f};
+	DATA.models.back()->SetLocation({0.f, 1.f, 0.f});
+	DATA.models.back()->transparentCube = true;
+
+	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{-1.5f, 0.05f, -1.48f}});
+	DATA.models.back()->ChangeName("window");
+	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{1.5f, 0.05f, 1.51f}});
+	DATA.models.back()->ChangeName("window");
+	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{0.0f, 0.05f, 0.7f}});
+	DATA.models.back()->ChangeName("window");
+	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{-0.3f, 0.05f,-2.3f}});
+	DATA.models.back()->ChangeName("window");
+	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{0.5f, 0.05f,-0.6f}});
+	DATA.models.back()->ChangeName("window");
 
 	for(Model* model : DATA.models)
 		DATA.unsortedModels.push_back(model);
@@ -226,6 +230,28 @@ int main(int argc, char ** argv)
 			model->DrawModel();
 		}
 
+		for(Light& light : DATA.lights)
+		{
+			if (light.type == 0)
+			{
+				pointLightModel.SetLocation(light.location);
+				pointLightModel.color = glm::vec4{light.diffuse, 1.f};
+				pointLightModel.SetScale({0.1f, 0.1f, 0.1f});
+				pointLightModel.DrawPointLight();
+			}
+			else if (light.type == 2)
+			{
+				spotLightModel.color = glm::vec4{light.diffuse, 1.f};
+				spotLightModel.SetScale({0.2f, 0.2f, 0.2f});
+				spotLightModel.SetLocation(light.location);
+
+				static const glm::vec3 up{0.f, 1.f, 0.f};
+				glm::vec3 axis = glm::cross(up, glm::normalize(light.direction));
+				float angle = glm::acos(glm::dot(up, glm::normalize(light.direction)));
+				spotLightModel.DrawSpotLight(angle, axis);
+			}
+		}
+
 		for(Model* model : DATA.models)
 		{
 			if (!model->outline)
@@ -247,28 +273,6 @@ int main(int argc, char ** argv)
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
 			// render outline <<<	
-		}
-
-		for(Light& light : DATA.lights)
-		{
-			if (light.type == 0)
-			{
-				pointLightModel.location = light.location;
-				pointLightModel.color = glm::vec4{light.diffuse, 1.f};
-				pointLightModel.scale = {0.1f, 0.1f, 0.1f};
-				pointLightModel.DrawPointLight();
-			}
-			else if (light.type == 2)
-			{
-				spotLightModel.color = glm::vec4{light.diffuse, 1.f};
-				spotLightModel.scale = {0.2f, 0.2f, 0.2f};
-				spotLightModel.location = light.location;
-
-				static const glm::vec3 up{0.f, 1.f, 0.f};
-				glm::vec3 axis = glm::cross(up, glm::normalize(light.direction));
-				float angle = glm::acos(glm::dot(up, glm::normalize(light.direction)));
-				spotLightModel.DrawSpotLight(angle, axis);
-			}
 		}
 
 		DrawGUI();
@@ -484,9 +488,15 @@ void DrawGUI()
 				ImGui::Text("%s", model.GetName().c_str());
 				ImGui::Indent();
 
-				ImGui::DragFloat3("location", (float*)&model.location, 0.01f);
-				ImGui::DragFloat3("scale", (float*)&model.scale, 0.01f);
-				ImGui::DragFloat3("rotation", (float*)&model.rotation, 0.01f);
+				auto location = model.GetLocation();
+				if (ImGui::DragFloat3("location", (float*)&location, 0.01f))
+					model.SetLocation(location);
+				auto scale = model.GetScale();
+				if (ImGui::DragFloat3("scale", (float*)&scale, 0.01f))
+					model.SetScale(scale);
+				auto rotation = model.GetRotation();
+				if (ImGui::DragFloat3("rotation", (float*)&rotation, 1.f))
+					model.SetRotation(rotation);
 				if (model.solidColor)
 					ImGui::ColorEdit4("color", (float*)&model.color, ImGuiColorEditFlags_Float);
 				ImGui::Checkbox("Outline", &model.outline);
@@ -521,10 +531,10 @@ void SortModelsByDepth()
 		if (model2->opaque)
 			return false;
 
-		float dist1 = glm::distance(DATA.camera.Position, model1->location);
+		float dist1 = glm::distance(DATA.camera.Position, model1->GetLocation());
 		if (model1->ID == DATA.FLOOR_ID)
 			dist1 = std::numeric_limits<float>::max();
-		float dist2 = glm::distance(DATA.camera.Position, model2->location);
+		float dist2 = glm::distance(DATA.camera.Position, model2->GetLocation());
 		if (model2->ID == DATA.FLOOR_ID)
 			dist2 = std::numeric_limits<float>::max();
 

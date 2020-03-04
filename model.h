@@ -29,10 +29,15 @@ public:
     void DrawPointLight();
     void DrawSpotLight(float angle, glm::vec3 axis);
     void DrawModel();
+
+    const glm::vec3& GetLocation() const { return location; }
+    void SetLocation(const glm::vec3& location);
+    const glm::vec3& GetScale() const { return scale; }
+    void SetScale(const glm::vec3& location);
+    const glm::vec3& GetRotation() const { return rotation; }
+    void SetRotation(const glm::vec3& rotation);
     
-    glm::vec3 location{0.f};
-    glm::vec3 scale{1.f};
-    glm::vec3 rotation{0.f};
+    void SortFaces();
 
     bool solidColor = false;
     glm::vec4 color{0.f, 0.f, 0.f, 1.f};
@@ -41,6 +46,7 @@ public:
 
     bool outline = false;
     bool opaque = false;
+    bool transparentCube = false;
     int shaderID = 0;
     int ID = 0;
 
@@ -61,6 +67,12 @@ private:
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
 
     static int NEXT_ID;
+    
+    glm::mat4 modelMat{1.f};
+    
+    glm::vec3 location{0.f};
+    glm::vec3 scale{1.f};
+    glm::vec3 rotation{0.f};
 };
 
 GLuint TextureFromFile(const char *path, const std::string& directory, bool gamma = false);

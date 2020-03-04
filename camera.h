@@ -67,21 +67,27 @@ class Camera
         return glm::lookAt(Position, Position + Front, Up);
     }
 
+    void SetPosition(const glm::vec3 position)
+    {
+        Position = position;
+        // TODO: move implementation to cpp file to refer DATA.models
+    }
+
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
         float velocity = MovementSpeed * deltaTime;
         if (direction == Camera_Movement::FORWARD)
-            Position += Front * velocity;
+            SetPosition(Position + Front * velocity);
         if (direction == Camera_Movement::BACKWARD)
-            Position -= Front * velocity;
+            SetPosition(Position - Front * velocity);
         if (direction == Camera_Movement::LEFT)
-            Position -= Right * velocity;
+            SetPosition(Position - Right * velocity);
         if (direction == Camera_Movement::RIGHT)
-            Position += Right * velocity;
+            SetPosition(Position + Right * velocity);
         if (direction == Camera_Movement::UP)
-            Position += Up * velocity;
+            SetPosition(Position + Up * velocity);
         if (direction == Camera_Movement::DOWN)
-            Position += -Up * velocity;
+            SetPosition(Position - Up * velocity);
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
