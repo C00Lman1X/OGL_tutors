@@ -6,6 +6,14 @@
 #include "camera.h"
 #include "ShadersManager.h"
 
+inline void glSet(GLenum prop, bool value)
+{
+    if (value)
+        glEnable(prop);
+    else
+        glDisable(prop);
+}
+
 struct Light {
     int type; // 0 - point light, 1 - direction light, 2 - spotlight
     glm::vec3 ambient{0.1f, 0.1f, 0.1f};
@@ -54,6 +62,8 @@ public:
     // cursor processing
     bool cursorCaptured = false;
     double lastX, lastY;
+
+    bool faceCulling = false;
 
     static const glm::vec3 DEFAULT_CAMERA_POS;
 

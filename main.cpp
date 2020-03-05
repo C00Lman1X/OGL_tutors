@@ -120,6 +120,7 @@ int main(int argc, char ** argv)
 	glViewport(0, 0, (GLsizei)DATA.width, (GLsizei)DATA.height);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_BLEND);
+	glSet(GL_CULL_FACE, DATA.faceCulling);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	IMGUI_CHECKVERSION();
@@ -512,6 +513,9 @@ void DrawGUI()
 		ImGui::Text("Camera at (%.3f, %.3f, %.3f)", DATA.camera.Position.x, DATA.camera.Position.y, DATA.camera.Position.z);
 		ImGui::Indent(); ImGui::Text("looking at (%.3f, %.3f, %.3f)", DATA.camera.Front.x, DATA.camera.Front.y, DATA.camera.Front.z); ImGui::Unindent(); 
 		ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
+
+		if (ImGui::Checkbox("Face culling", &DATA.faceCulling))
+			glSet(GL_CULL_FACE, DATA.faceCulling);			
 
 		ImGui::End();
 	}
