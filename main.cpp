@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
+#include <array>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -102,6 +103,29 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 
+	std::array<float, 24> quadVertices = {  
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+		1.0f,  1.0f,  1.0f, 1.0f
+	};
+	GLuint quadVAO, quadVBO;
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	
+	glBindVertexArray(quadVAO);	
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(float), &quadVertices[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(sizeof(float)*2));
+	glBindVertexArray(0);
+
 	std::vector<Vertex> vertices;
 	vertices.push_back(Vertex{glm::vec3{0.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 1.f}});
 	vertices.push_back(Vertex{glm::vec3{1.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 1.f}});
@@ -110,7 +134,7 @@ int main(int argc, char ** argv)
 	std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
 	
 	Texture texture;
-	texture.id = TextureFromFile("blending_transparent_window.png", "textures");
+	texture.id = TextureFromFile("container.jpg", "textures");
 	texture.type = "texture_diffuse";
 
 	Mesh mesh2D{vertices, indices, std::vector<Texture>{texture}};
@@ -118,10 +142,38 @@ int main(int argc, char ** argv)
 	ShadersManager& shadersManager = DATA.shadersManager;
 
 	glViewport(0, 0, (GLsizei)DATA.width, (GLsizei)DATA.height);
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_BLEND);
 	glSet(GL_CULL_FACE, DATA.faceCulling);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// FRAMEBUFFER >>>
+	GLuint fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	GLuint rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, (GLsizei)DATA.width, (GLsizei)DATA.height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	GLuint tex = 0;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)DATA.width, (GLsizei)DATA.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cerr << "ERROR::FRAMEBUFFER::Framebuffer isn't complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// FRAMEBUFFER <<<
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -135,6 +187,7 @@ int main(int argc, char ** argv)
 	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 	int solidShaderID = shadersManager.CreateShader("shaders/vertex_solid.glsl", "shaders/fragment_solid.glsl");
 	int textureShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_model.glsl");
+	int screenShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad.glsl");
 	
 	Model spotLightModel("shapes/cone.nff", lightShaderID);
 	Model pointLightModel("shapes/sphere.nff", lightShaderID);
@@ -175,15 +228,15 @@ int main(int argc, char ** argv)
 	DATA.models.back()->transparentCube = true;
 	DATA.models.back()->SortFaces();
 
-	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{-1.5f, 0.05f, -1.48f}});
+	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{-1.5f, 0.05f, -1.48f}});
 	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{1.5f, 0.05f, 1.51f}});
+	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{1.5f, 0.05f, 1.51f}});
 	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{0.0f, 0.05f, 0.7f}});
+	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{0.0f, 0.05f, 0.7f}});
 	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{-0.3f, 0.05f,-2.3f}});
+	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{-0.3f, 0.05f,-2.3f}});
 	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, textureShaderID, glm::vec3{0.5f, 0.05f,-0.6f}});
+	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{0.5f, 0.05f,-0.6f}});
 	DATA.models.back()->ChangeName("window");
 
 	for(Model* model : DATA.models)
@@ -203,6 +256,9 @@ int main(int argc, char ** argv)
 		lastFrame = currentFrame;
 		processInput(wnd, dt);
 
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_STENCIL_TEST);
@@ -278,6 +334,15 @@ int main(int argc, char ** argv)
 		}
 
 		DrawGUI();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(1.f, 1.f, 1.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		shadersManager.GetShader(screenShaderID).use();
+		glBindVertexArray(quadVAO);
+		glDisable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
