@@ -131,6 +131,12 @@ void Shader::set(const std::string &name, const glm::mat4 &mat) const
     glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat));
 }
 
+void Shader::set(const std::string &name, float *f, int count)
+{
+    GLint loc = getUniformLoc(name);
+    glUniform1fv(loc, count, f);
+}
+
 GLint Shader::getUniformLoc(const std::string &name) const
 {
     auto it = checkedUniforms.find(name);

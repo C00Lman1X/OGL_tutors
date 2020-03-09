@@ -187,22 +187,28 @@ int main(int argc, char ** argv)
 	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 	int solidShaderID = shadersManager.CreateShader("shaders/vertex_solid.glsl", "shaders/fragment_solid.glsl");
 	int textureShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_model.glsl");
+	
+	// screen shaders
 	int screenShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad.glsl");
+	DATA.SCREEN_SHADER_ID = screenShaderID;
+	DATA.currentScreenShader = screenShaderID;
+	int inverseShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad_inverse.glsl");
+	int grayscaleShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad_grayscale.glsl");
+	int kernelShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad_kernel.glsl");
 	
 	Model spotLightModel("shapes/cone.nff", lightShaderID);
 	Model pointLightModel("shapes/sphere.nff", lightShaderID);
 
 	// Scene description >>>
-	/*
 	Model model("nanosuit/nanosuit.obj", modelShaderID);
-	model.location = {0.f, 0.f, -3.f};
+	model.SetLocation({0.f, 0.f, -3.f});
 	model.opaque = true;
 	DATA.models.push_back(&model);
 
 	Model sphereModel("shapes/sphere.nff", modelShaderID);
 	sphereModel.solidColor = true;
 	sphereModel.color = {1.f, 0.5f, 0.f, 1.f};
-	sphereModel.location = {0.f, 1.05f, -5.f};
+	sphereModel.SetLocation({0.f, 1.05f, -5.f});
 	sphereModel.outline = true;
 	DATA.models.push_back(&sphereModel);
 
@@ -210,10 +216,8 @@ int main(int argc, char ** argv)
 	DATA.models.push_back(&cube);
 	DATA.models.back()->solidColor = true;
 	DATA.models.back()->color = {0.f, 0.5f, 1.0f, 1.f};
-	DATA.models.back()->location = {-2.f, 1.05f, -5.f};
+	DATA.models.back()->SetLocation({-2.f, 1.05f, -5.f});
 	DATA.models.back()->outline = true;
-
-	*/
 
 	Model floor("shapes/cube.nff", modelShaderID);
 	floor.solidColor = true;
@@ -333,16 +337,16 @@ int main(int argc, char ** argv)
 			// render outline <<<	
 		}
 
-		DrawGUI();
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(1.f, 1.f, 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		shadersManager.GetShader(screenShaderID).use();
+		shadersManager.GetShader(DATA.currentScreenShader).use();
 		glBindVertexArray(quadVAO);
 		glDisable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, tex);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		
+		DrawGUI();
 
 		glfwSwapBuffers(wnd);
 		glfwPollEvents();
@@ -572,6 +576,58 @@ void DrawGUI()
 
 				ImGui::Unindent();
 				ImGui::PopID();
+			}
+		}
+
+		if (ImGui::CollapsingHeader("Post-processing"))
+		{
+			bool changed = false;
+			changed = ImGui::RadioButton("Default", &DATA.postEffect, 0) || changed;
+			changed = ImGui::RadioButton("Inverse", &DATA.postEffect, 1) || changed;
+			changed = ImGui::RadioButton("Grayscale", &DATA.postEffect, 2) || changed;
+			changed = ImGui::RadioButton("With kernel", &DATA.postEffect, 3) || changed;
+			if (changed)
+				DATA.currentScreenShader = DATA.SCREEN_SHADER_ID + DATA.postEffect;
+
+			if (DATA.postEffect == 3)
+			{
+				ImGui::Indent();
+				changed = false;
+				changed = ImGui::RadioButton("Sharpen", &DATA.currentKernel, 0) || changed;
+				changed = ImGui::RadioButton("Blur", &DATA.currentKernel, 1) || changed;
+				changed = ImGui::RadioButton("Edge Detection", &DATA.currentKernel, 2) || changed;
+				if (changed)
+				{
+					Shader& shader = DATA.shadersManager.GetShader(DATA.SCREEN_SHADER_ID + DATA.postEffect);
+					float kernel[] = {
+						0.f, 0.f, 0.f,
+						0.f, 1.f, 0.f,
+						0.f, 0.f, 0.f
+					};
+					switch (DATA.currentKernel)
+					{
+					case 0:
+						kernel[0] = 2.f; kernel[1] = 2.f; kernel[2] = 2.f;
+						kernel[3] = 2.f; kernel[4] = -15.f; kernel[5] = 2.f;
+						kernel[6] = 2.f; kernel[7] = 2.f; kernel[8] = 2.f;
+						break;
+					case 1:
+						kernel[0] = 1.f / 16.f; kernel[1] = 2.f / 16.f; kernel[2] = 1.f / 16.f;
+						kernel[3] = 2.f / 16.f; kernel[4] = 4.f / 16.f; kernel[5] = 2.f / 16.f;
+						kernel[6] = 1.f / 16.f; kernel[7] = 2.f / 16.f; kernel[8] = 1.f / 16.f;
+						break;
+					case 2:
+						kernel[0] = 1.f; kernel[1] = 1.f; kernel[2] = 1.f;
+						kernel[3] = 1.f; kernel[4] = -8.f; kernel[5] = 1.f;
+						kernel[6] = 1.f; kernel[7] = 1.f; kernel[8] = 1.f;
+						break;
+					
+					default:
+						break;
+					}
+					shader.set("kernel", kernel, 9);
+				}
+				ImGui::Unindent();
 			}
 		}
 

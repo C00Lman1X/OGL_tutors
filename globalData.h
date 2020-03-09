@@ -64,10 +64,16 @@ public:
     double lastX, lastY;
 
     bool faceCulling = false;
+    int postEffect = 0;
 
     static const glm::vec3 DEFAULT_CAMERA_POS;
 
     int FLOOR_ID = 0;
+
+    // post-processing
+    int SCREEN_SHADER_ID = 0;
+    int currentScreenShader = 0;
+    int currentKernel = 0;
 
     ShadersManager shadersManager;
     std::vector<class Model*> models;
