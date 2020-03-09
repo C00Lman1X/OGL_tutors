@@ -1,0 +1,47 @@
+{
+    "Lights": [],
+    "Models": [
+        {
+            "path" : "nanosuit/nanosuit.obj",
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [0.0, 0.0, -3.0],
+            "opaque" : true
+        },
+        {
+            "path" : "shapes/sphere.nff",
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "solidColor" : true,
+            "color" : [1.0, 0.5, 0.0, 1.0],
+            "location" : [0.0, 1.05, -5.0],
+            "outline" : true
+        },
+        {
+            "path" : "shapes/cube.nff",
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "solidColor" : true,
+            "color" : [0.0, 0.5, 1.0, 1.0],
+            "location" : [-2.0, 1.05, -5.0],
+            "outline" : true
+        },
+        {
+            "path" : "shapes/cube.nff",
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "solidColor" : true,
+            "color" : [0.3, 0.3, 0.3, 1.0],
+            "scale" : [50.0, 0.05, 50.0],
+            "name" : "floor",
+            "opaque" : true
+        },
+        {
+            "path" : "shapes/textured_cube.nff",
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [0.0, 1.0, 0.0],
+            "transparentCube" : true
+        }
+    ]
+}

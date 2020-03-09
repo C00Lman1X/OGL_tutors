@@ -15,6 +15,7 @@ class ShadersManager
 public:
     int AddShader(Shader && shader);
     int CreateShader(const GLchar* vertexPath, const GLchar* fragmentPath);
+    int GetShaderID(const GLchar* vertexPath, const GLchar* fragmentPath);
 
     template<typename T>
     void set(const std::string &name, const T& value)
@@ -54,4 +55,5 @@ public:
     void setVec3(const std::string &name, const glm::vec3 &vec);
 
     class Shader& GetShader(int id);
+
 };

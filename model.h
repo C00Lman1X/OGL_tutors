@@ -76,3 +76,4 @@ private:
 };
 
 GLuint TextureFromFile(const char *path, const std::string& directory, bool gamma = false);
+GLuint CubemapFromFile(const std::vector<std::string> &faces);

@@ -14,6 +14,8 @@ class Shader
 {
 public:
     GLuint ID;
+    std::string vShaderName;
+    std::string fShaderName;
 
     Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
 

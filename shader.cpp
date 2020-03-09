@@ -8,6 +8,14 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
 
+    std::string sVertexPath{vertexPath};
+    size_t pos = sVertexPath.find_last_of('/') + 1;
+    vShaderName = sVertexPath.substr(pos);
+    
+    std::string sFragmentPath{fragmentPath};
+    pos = sFragmentPath.find_last_of('/') + 1;
+    fShaderName = sFragmentPath.substr(pos);
+
     //vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     //fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try

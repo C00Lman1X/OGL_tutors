@@ -68,8 +68,6 @@ public:
 
     static const glm::vec3 DEFAULT_CAMERA_POS;
 
-    int FLOOR_ID = 0;
-
     // post-processing
     int SCREEN_SHADER_ID = 0;
     int currentScreenShader = 0;
