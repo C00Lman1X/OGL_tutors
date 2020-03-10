@@ -1,5 +1,14 @@
 {
-    "Lights": [],
+    "Lights": [
+        {
+            "type" : 0,
+            "location" : [-0.5, 2.0, 0.0]
+        },
+        {
+            "type" : 0,
+            "location" : [0.0, 12.0, 1.0]
+        }
+    ],
     "Models": [
         {
             "path" : "nanosuit/nanosuit.obj",
@@ -42,6 +51,41 @@
             "vShader" : "shaders/vertex.glsl",
             "location" : [0.0, 1.0, 0.0],
             "transparentCube" : true
+        },
+        {
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [-1.5, 0.55, -1.48],
+            "name" : "window",
+            "texture" : "textures/blending_transparent_window.png"
+        },
+        {
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [1.5, 0.55, 1.51],
+            "name" : "window",
+            "texture" : "textures/blending_transparent_window.png"
+        },
+        {
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [0.0, 0.55, 0.7],
+            "name" : "window",
+            "texture" : "textures/blending_transparent_window.png"
+        },
+        {
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [-0.3, 0.55, -2.3],
+            "name" : "window",
+            "texture" : "textures/blending_transparent_window.png"
+        },
+        {
+            "fShader" : "shaders/fragment.glsl",
+            "vShader" : "shaders/vertex.glsl",
+            "location" : [0.5, 0.55, -0.6],
+            "name" : "window",
+            "texture" : "textures/blending_transparent_window.png"
         }
     ]
 }

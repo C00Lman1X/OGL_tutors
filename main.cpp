@@ -114,19 +114,6 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 
-	std::vector<Vertex> vertices;
-	vertices.push_back(Vertex{glm::vec3{0.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 1.f}});
-	vertices.push_back(Vertex{glm::vec3{1.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 1.f}});
-	vertices.push_back(Vertex{glm::vec3{0.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
-	vertices.push_back(Vertex{glm::vec3{1.f, 1.f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 0.f}});
-	std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
-	
-	Texture texture;
-	texture.id = TextureFromFile("blending_transparent_window.png", "textures");
-	texture.type = "texture_diffuse";
-
-	Mesh mesh2D{vertices, indices, std::vector<Texture>{texture}};
-
 	ShadersManager& shadersManager = DATA.shadersManager;
 
 	glViewport(0, 0, (GLsizei)DATA.width, (GLsizei)DATA.height);
@@ -163,24 +150,8 @@ int main(int argc, char ** argv)
 
 	// Scene description >>>
 	LoadSceneFromJSON();
-
-	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{-1.5f, 0.05f, -1.48f}});
-	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{1.5f, 0.05f, 1.51f}});
-	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{0.0f, 0.05f, 0.7f}});
-	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{-0.3f, 0.05f,-2.3f}});
-	DATA.models.back()->ChangeName("window");
-	DATA.models.emplace_back(new Model{mesh2D, modelShaderID, glm::vec3{0.5f, 0.05f,-0.6f}});
-	DATA.models.back()->ChangeName("window");
-
 	for(Model* model : DATA.models)
 		DATA.unsortedModels.push_back(model);
-	
-	Light dirLight;
-	dirLight.type = 1;
-	DATA.lights.push_back(dirLight);
 	// Scene description <<<
 
 	float dt = 0.f;
@@ -588,17 +559,63 @@ void LoadSceneFromJSON()
 {
 	std::ifstream i("scenes/scene.json");
 	json jScene;
-	i >> jScene;
+	try
+	{
+		i >> jScene;
+	}
+	catch (const nlohmann::detail::exception& ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		exit(1);
+	}
 
 	for(auto& jLight : jScene["Lights"])
 	{
+		Light light(jLight.value("type", 0));
+		light.ambient = getVec3(jLight.value("ambient", std::vector<float>{0.1f, 0.1f, 0.1f}));
+		light.diffuse = getVec3(jLight.value("diffuse", std::vector<float>{1.0f, 1.0f, 1.0f}));
+		light.specular = getVec3(jLight.value("specular", std::vector<float>{1.0f, 1.0f, 1.0f}));
+		
+		light.constant = jLight.value("constant", 1.f);
+		light.linear = jLight.value("linear", 0.09f);
+		light.quadratic = jLight.value("quadratic", 0.032f);
 
+		light.location = getVec3(jLight.value("location", std::vector<float>{0.0f, 0.0f, 0.0f}));
+		light.direction = getVec3(jLight.value("direction", std::vector<float>{-0.5f, -1.0f, -0.3f}));
+		
+		light.innerCutOff = jLight.value("innerCutOff", 0.97629600712f);
+		light.outerCutOff = jLight.value("outerCutOff", 0.95371695074f);
+
+		DATA.lights.push_back(light);
 	}
 
 	for(auto& jModel : jScene["Models"])
 	{
 		int shaderID = DATA.shadersManager.GetShaderID(jModel["vShader"].get<std::string>().c_str(), jModel["fShader"].get<std::string>().c_str());
-		Model* model = new Model(jModel["path"].get<std::string>().c_str(), shaderID);
+		Model* model = nullptr;
+		if (jModel.find("path") != jModel.end())
+		{
+			model = new Model(jModel["path"].get<std::string>().c_str(), shaderID);
+		}
+		else
+		{
+			std::vector<Vertex> vertices;
+			vertices.push_back(Vertex{glm::vec3{-0.5f, -0.5f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 1.f}});
+			vertices.push_back(Vertex{glm::vec3{0.5f, -0.5f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 1.f}});
+			vertices.push_back(Vertex{glm::vec3{-0.5f, 0.5f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
+			vertices.push_back(Vertex{glm::vec3{0.5f, 0.5f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 0.f}});
+			std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
+			
+			Texture texture;
+			texture.id = TextureFromFile(jModel.value("texture", "").c_str(), "");
+			texture.type = "texture_diffuse";
+
+			Mesh mesh2D{vertices, indices, std::vector<Texture>{texture}};
+			model = new Model{mesh2D, shaderID};
+		}
+		if (!model)
+			continue;
+
 		model->SetLocation(getVec3(jModel.value("location", std::vector<float>{0.f, 0.f, 0.f})));
 		model->SetScale(getVec3(jModel.value("scale", std::vector<float>{1.f, 1.f, 1.f})));
 		model->color = glm::vec4{getVec3(jModel.value("color", std::vector<float>{0.f, 0.f, 0.f})), 1.f};

@@ -214,7 +214,8 @@ void Model::ChangeName(const std::string& newName)
 GLuint TextureFromFile(const char *path, const std::string& directory, bool gamma/* = false*/)
 {
     std::string filename(path);
-    filename = directory + '/' + filename;
+    if (!directory.empty())
+        filename = directory + '/' + filename;
 
 	GLuint textureID;
 	glGenTextures(1, &textureID);
