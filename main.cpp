@@ -40,19 +40,19 @@ glm::vec3 getVec3(const std::vector<float> vec)
 	return {vec[0], vec[1], vec[2]};
 }
 
-void error_callback(int error, const char* description)
+void error_callback(int error, const char *description)
 {
 	std::cerr << "Error: " << description << std::endl;
 }
 
-void framebuffer_size_callback(GLFWwindow* wnd, int width, int height)
+void framebuffer_size_callback(GLFWwindow *wnd, int width, int height)
 {
 	glViewport(0, 0, width, height);
 	DATA.width = (float)width;
 	DATA.height = (float)height;
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
 	if (ImGui::GetIO().WantCaptureKeyboard)
 		return;
@@ -73,9 +73,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		DATA.drawLight = !DATA.drawLight;
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-	GLFWwindow* wnd;
+	GLFWwindow *wnd;
 
 	if (!glfwInit())
 		return -1;
@@ -104,9 +104,9 @@ int main(int argc, char ** argv)
 	glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	glfwMakeContextCurrent(wnd);
-	
+
 	if (glfwRawMouseMotionSupported())
-    	glfwSetInputMode(wnd, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		glfwSetInputMode(wnd, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -114,19 +114,20 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 
-	ShadersManager& shadersManager = DATA.shadersManager;
+	ShadersManager &shadersManager = DATA.shadersManager;
 
 	glViewport(0, 0, (GLsizei)DATA.width, (GLsizei)DATA.height);
 	glEnable(GL_BLEND);
 	glSet(GL_CULL_FACE, DATA.faceCulling);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	glDepthFunc(GL_LEQUAL);
 
 	Framebuffer frameBuffer((GLsizei)DATA.width, (GLsizei)DATA.height, {0.1f, 0.1f, 0.1f, 1.0f});
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(wnd, true);
@@ -136,7 +137,7 @@ int main(int argc, char ** argv)
 	int lightShaderID = shadersManager.CreateShader("shaders/vertex_lamp.glsl", "shaders/fragment_lamp.glsl");
 	int solidShaderID = shadersManager.CreateShader("shaders/vertex_solid.glsl", "shaders/fragment_solid.glsl");
 	int textureShaderID = shadersManager.CreateShader("shaders/vertex_2D.glsl", "shaders/fragment_model.glsl");
-	
+
 	// screen shaders
 	int screenShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad.glsl");
 	DATA.SCREEN_SHADER_ID = screenShaderID;
@@ -144,19 +145,82 @@ int main(int argc, char ** argv)
 	int inverseShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad_inverse.glsl");
 	int grayscaleShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad_grayscale.glsl");
 	int kernelShaderID = shadersManager.CreateShader("shaders/vertex_quad.glsl", "shaders/fragment_quad_kernel.glsl");
-	
+
+	int skyboxShaderID = shadersManager.CreateShader("shaders/vertex_skybox.glsl", "shaders/fragment_skybox.glsl");
+
 	Model spotLightModel("shapes/cone.nff", lightShaderID);
 	Model pointLightModel("shapes/sphere.nff", lightShaderID);
 
+	std::vector<std::string> faces{
+		"textures/skybox/right.jpg",
+		"textures/skybox/left.jpg",
+		"textures/skybox/top.jpg",
+		"textures/skybox/bottom.jpg",
+		"textures/skybox/front.jpg",
+		"textures/skybox/back.jpg"};
+	GLuint cubemapTexture = CubemapFromFile(faces);
+	std::array<float, 108> skyboxVertices = {
+		-1.0f, 1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+
+		-1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f,
+
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f,
+
+		-1.0f, 1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, 1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, 1.0f,
+		1.0f, -1.0f, 1.0f};
+	
+	GLuint skyboxVAO, skyboxVBO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1,&skyboxVBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, skyboxVertices.size() * sizeof(float), &skyboxVertices[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBindVertexArray(0);	
+
 	// Scene description >>>
 	LoadSceneFromJSON();
-	for(Model* model : DATA.models)
+	for (Model *model : DATA.models)
 		DATA.unsortedModels.push_back(model);
 	// Scene description <<<
 
 	float dt = 0.f;
 	float lastFrame = 0.f;
-	while(!glfwWindowShouldClose(wnd))
+	while (!glfwWindowShouldClose(wnd))
 	{
 		float currentFrame = (float)glfwGetTime();
 		dt = currentFrame - lastFrame;
@@ -177,7 +241,7 @@ int main(int argc, char ** argv)
 
 		SortModelsByDepth();
 
-		for(Model* model : DATA.models)
+		for (Model *model : DATA.models)
 		{
 			if (model->outline)
 			{
@@ -191,7 +255,7 @@ int main(int argc, char ** argv)
 			model->DrawModel();
 		}
 
-		for(Light& light : DATA.lights)
+		for (Light &light : DATA.lights)
 		{
 			if (light.type == 0)
 			{
@@ -213,30 +277,39 @@ int main(int argc, char ** argv)
 			}
 		}
 
-		for(Model* model : DATA.models)
+		for (Model *model : DATA.models)
 		{
 			if (!model->outline)
 				continue;
-			
+
 			// render outline >>>
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 			glStencilMask(0x00);
 			glDisable(GL_DEPTH_TEST);
-			
+
 			auto tmpShader = model->shaderID;
 			model->shaderID = solidShaderID;
-			
+
 			model->DrawModel();
-			
+
 			model->shaderID = tmpShader;
-			
+
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
-			// render outline <<<	
+			// render outline <<<
 		}
 		
-    	shadersManager.GetShader(DATA.currentScreenShader).use();
+		glDepthMask(GL_FALSE);
+		shadersManager.GetShader(skyboxShaderID).use();
+		view = glm::mat4(glm::mat3(view));
+		shadersManager.GetShader(skyboxShaderID).set("view", view);
+		glBindVertexArray(skyboxVAO);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
+
+		shadersManager.GetShader(DATA.currentScreenShader).use();
 		frameBuffer.Draw();
 
 		DrawGUI();
@@ -253,7 +326,7 @@ void processInput(GLFWwindow *window, float dt)
 {
 	if (ImGui::GetIO().WantCaptureKeyboard)
 		return;
-		
+
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		DATA.camera.ProcessKeyboard(Camera_Movement::FORWARD, dt);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -282,8 +355,8 @@ void processInput(GLFWwindow *window, float dt)
 
 void mouse_callback(GLFWwindow *window, double x, double y)
 {
-	ImGuiIO& io = ImGui::GetIO();
-	
+	ImGuiIO &io = ImGui::GetIO();
+
 	if (DATA.cursorCaptured)
 	{
 		float dx = (float)(x - DATA.lastX);
@@ -304,7 +377,7 @@ void scroll_callback(GLFWwindow *window, double dx, double dy)
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 	if (action == GLFW_PRESS && !io.WantCaptureMouse)
 	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -326,7 +399,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 void SetLights()
 {
 	int pointLightsCount = 0, dirLightsCount = 0, spotLightsCount = 0;
-	for(const Light& light : DATA.lights)
+	for (const Light &light : DATA.lights)
 	{
 		std::string lightName;
 		switch (light.type)
@@ -355,7 +428,7 @@ void SetLights()
 			DATA.shadersManager.set(lightName + ".position", light.location);
 			break;
 		}
-		
+
 		default:
 			break;
 		}
@@ -374,7 +447,7 @@ void DrawGUI()
 {
 	auto lightToDelete = DATA.lights.end();
 	int lightTypeToAdd = -1;
-	
+
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
@@ -383,34 +456,34 @@ void DrawGUI()
 		if (ImGui::CollapsingHeader("Lights"))
 		{
 			int i = 0;
-			for(auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
+			for (auto itLight = DATA.lights.begin(); itLight != DATA.lights.end(); ++itLight)
 			{
 				ImGui::PushID(++i);
-				Light& light = *itLight;
+				Light &light = *itLight;
 				if (light.type == 0)
 				{
 					ImGui::Text("Point");
 					ImGui::Indent();
-					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
+					ImGui::DragFloat3("location", (float *)&light.location, 0.01f);
 				}
 				else if (light.type == 1)
 				{
 					ImGui::Text("Directional");
 					ImGui::Indent();
-					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+					ImGui::DragFloat3("direction", (float *)&light.direction, 0.01f, -1.0f, 1.0f);
 				}
 				else if (light.type == 2)
 				{
 					ImGui::Text("Spot");
 					ImGui::Indent();
-					ImGui::DragFloat3("location", (float*)&light.location, 0.01f);
-					ImGui::DragFloat3("direction", (float*)&light.direction, 0.01f, -1.0f, 1.0f);
+					ImGui::DragFloat3("location", (float *)&light.location, 0.01f);
+					ImGui::DragFloat3("direction", (float *)&light.direction, 0.01f, -1.0f, 1.0f);
 					ImGui::DragFloat("innerCutOff", &light.innerCutOff, 0.001f, 0.f, 1.f);
 					ImGui::DragFloat("outerCutOff", &light.outerCutOff, 0.001f, 0.f, 1.f);
 				}
-				ImGui::ColorEdit3("ambient", (float*)&light.ambient, ImGuiColorEditFlags_Float);
-				ImGui::ColorEdit3("diffuse", (float*)&light.diffuse, ImGuiColorEditFlags_Float);
-				ImGui::ColorEdit3("specular", (float*)&light.specular, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("ambient", (float *)&light.ambient, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("diffuse", (float *)&light.diffuse, ImGuiColorEditFlags_Float);
+				ImGui::ColorEdit3("specular", (float *)&light.specular, ImGuiColorEditFlags_Float);
 				if (ImGui::Button("Delete light"))
 					lightToDelete = itLight;
 
@@ -443,27 +516,28 @@ void DrawGUI()
 		if (ImGui::CollapsingHeader("Models"))
 		{
 			int imGuiID = 0;
-			for(Model* pModel : DATA.unsortedModels)
+			for (Model *pModel : DATA.unsortedModels)
 			{
-				Model& model = *pModel;
+				Model &model = *pModel;
 				ImGui::PushID(++imGuiID);
 				ImGui::Text("%s", model.GetName().c_str());
 				ImGui::Indent();
 
 				auto location = model.GetLocation();
-				if (ImGui::DragFloat3("location", (float*)&location, 0.01f))
+				if (ImGui::DragFloat3("location", (float *)&location, 0.01f))
 					model.SetLocation(location);
 				auto scale = model.GetScale();
-				if (ImGui::DragFloat3("scale", (float*)&scale, 0.01f))
+				if (ImGui::DragFloat3("scale", (float *)&scale, 0.01f))
 					model.SetScale(scale);
 				auto rotation = model.GetRotation();
-				if (ImGui::DragFloat3("rotation", (float*)&rotation, 1.f))
+				if (ImGui::DragFloat3("rotation", (float *)&rotation, 1.f))
 					model.SetRotation(rotation);
 				if (model.solidColor)
-					ImGui::ColorEdit4("color", (float*)&model.color, ImGuiColorEditFlags_Float);
+					ImGui::ColorEdit4("color", (float *)&model.color, ImGuiColorEditFlags_Float);
 				ImGui::Checkbox("Outline", &model.outline);
 				ImGui::SetNextItemWidth(100.f);
-				ImGui::SameLine(); ImGui::DragFloat("Shininess", &model.shininess);
+				ImGui::SameLine();
+				ImGui::DragFloat("Shininess", &model.shininess);
 
 				ImGui::Unindent();
 				ImGui::PopID();
@@ -489,30 +563,47 @@ void DrawGUI()
 				changed = ImGui::RadioButton("Edge Detection", &DATA.currentKernel, 2) || changed;
 				if (changed)
 				{
-					Shader& shader = DATA.shadersManager.GetShader(DATA.SCREEN_SHADER_ID + DATA.postEffect);
+					Shader &shader = DATA.shadersManager.GetShader(DATA.SCREEN_SHADER_ID + DATA.postEffect);
 					float kernel[] = {
 						0.f, 0.f, 0.f,
 						0.f, 1.f, 0.f,
-						0.f, 0.f, 0.f
-					};
+						0.f, 0.f, 0.f};
 					switch (DATA.currentKernel)
 					{
 					case 0:
-						kernel[0] = 2.f; kernel[1] = 2.f; kernel[2] = 2.f;
-						kernel[3] = 2.f; kernel[4] = -15.f; kernel[5] = 2.f;
-						kernel[6] = 2.f; kernel[7] = 2.f; kernel[8] = 2.f;
+						kernel[0] = 2.f;
+						kernel[1] = 2.f;
+						kernel[2] = 2.f;
+						kernel[3] = 2.f;
+						kernel[4] = -15.f;
+						kernel[5] = 2.f;
+						kernel[6] = 2.f;
+						kernel[7] = 2.f;
+						kernel[8] = 2.f;
 						break;
 					case 1:
-						kernel[0] = 1.f / 16.f; kernel[1] = 2.f / 16.f; kernel[2] = 1.f / 16.f;
-						kernel[3] = 2.f / 16.f; kernel[4] = 4.f / 16.f; kernel[5] = 2.f / 16.f;
-						kernel[6] = 1.f / 16.f; kernel[7] = 2.f / 16.f; kernel[8] = 1.f / 16.f;
+						kernel[0] = 1.f / 16.f;
+						kernel[1] = 2.f / 16.f;
+						kernel[2] = 1.f / 16.f;
+						kernel[3] = 2.f / 16.f;
+						kernel[4] = 4.f / 16.f;
+						kernel[5] = 2.f / 16.f;
+						kernel[6] = 1.f / 16.f;
+						kernel[7] = 2.f / 16.f;
+						kernel[8] = 1.f / 16.f;
 						break;
 					case 2:
-						kernel[0] = 1.f; kernel[1] = 1.f; kernel[2] = 1.f;
-						kernel[3] = 1.f; kernel[4] = -8.f; kernel[5] = 1.f;
-						kernel[6] = 1.f; kernel[7] = 1.f; kernel[8] = 1.f;
+						kernel[0] = 1.f;
+						kernel[1] = 1.f;
+						kernel[2] = 1.f;
+						kernel[3] = 1.f;
+						kernel[4] = -8.f;
+						kernel[5] = 1.f;
+						kernel[6] = 1.f;
+						kernel[7] = 1.f;
+						kernel[8] = 1.f;
 						break;
-					
+
 					default:
 						break;
 					}
@@ -523,11 +614,13 @@ void DrawGUI()
 		}
 
 		ImGui::Text("Camera at (%.3f, %.3f, %.3f)", DATA.camera.Position.x, DATA.camera.Position.y, DATA.camera.Position.z);
-		ImGui::Indent(); ImGui::Text("looking at (%.3f, %.3f, %.3f)", DATA.camera.Front.x, DATA.camera.Front.y, DATA.camera.Front.z); ImGui::Unindent(); 
+		ImGui::Indent();
+		ImGui::Text("looking at (%.3f, %.3f, %.3f)", DATA.camera.Front.x, DATA.camera.Front.y, DATA.camera.Front.z);
+		ImGui::Unindent();
 		ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
 
 		if (ImGui::Checkbox("Face culling", &DATA.faceCulling))
-			glSet(GL_CULL_FACE, DATA.faceCulling);			
+			glSet(GL_CULL_FACE, DATA.faceCulling);
 
 		ImGui::End();
 	}
@@ -542,7 +635,7 @@ void DrawGUI()
 
 void SortModelsByDepth()
 {
-	std::sort(DATA.models.begin(), DATA.models.end(), [](const Model* model1, const Model* model2) {
+	std::sort(DATA.models.begin(), DATA.models.end(), [](const Model *model1, const Model *model2) {
 		if (model2->opaque)
 			return false;
 		if (model1->opaque)
@@ -563,36 +656,36 @@ void LoadSceneFromJSON()
 	{
 		i >> jScene;
 	}
-	catch (const nlohmann::detail::exception& ex)
+	catch (const nlohmann::detail::exception &ex)
 	{
 		std::cerr << ex.what() << std::endl;
 		exit(1);
 	}
 
-	for(auto& jLight : jScene["Lights"])
+	for (auto &jLight : jScene["Lights"])
 	{
 		Light light(jLight.value("type", 0));
 		light.ambient = getVec3(jLight.value("ambient", std::vector<float>{0.1f, 0.1f, 0.1f}));
 		light.diffuse = getVec3(jLight.value("diffuse", std::vector<float>{1.0f, 1.0f, 1.0f}));
 		light.specular = getVec3(jLight.value("specular", std::vector<float>{1.0f, 1.0f, 1.0f}));
-		
+
 		light.constant = jLight.value("constant", 1.f);
 		light.linear = jLight.value("linear", 0.09f);
 		light.quadratic = jLight.value("quadratic", 0.032f);
 
 		light.location = getVec3(jLight.value("location", std::vector<float>{0.0f, 0.0f, 0.0f}));
 		light.direction = getVec3(jLight.value("direction", std::vector<float>{-0.5f, -1.0f, -0.3f}));
-		
+
 		light.innerCutOff = jLight.value("innerCutOff", 0.97629600712f);
 		light.outerCutOff = jLight.value("outerCutOff", 0.95371695074f);
 
 		DATA.lights.push_back(light);
 	}
 
-	for(auto& jModel : jScene["Models"])
+	for (auto &jModel : jScene["Models"])
 	{
 		int shaderID = DATA.shadersManager.GetShaderID(jModel["vShader"].get<std::string>().c_str(), jModel["fShader"].get<std::string>().c_str());
-		Model* model = nullptr;
+		Model *model = nullptr;
 		if (jModel.find("path") != jModel.end())
 		{
 			model = new Model(jModel["path"].get<std::string>().c_str(), shaderID);
@@ -605,7 +698,7 @@ void LoadSceneFromJSON()
 			vertices.push_back(Vertex{glm::vec3{-0.5f, 0.5f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{0.f, 0.f}});
 			vertices.push_back(Vertex{glm::vec3{0.5f, 0.5f, 0.f}, glm::vec3{0.f, 0.f, 1.f}, glm::vec2{1.f, 0.f}});
 			std::vector<GLuint> indices{0, 1, 2, 1, 3, 2};
-			
+
 			Texture texture;
 			texture.id = TextureFromFile(jModel.value("texture", "").c_str(), "");
 			texture.type = "texture_diffuse";
