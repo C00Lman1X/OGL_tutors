@@ -276,6 +276,15 @@ int main(int argc, char **argv)
 				spotLightModel.DrawSpotLight(angle, axis);
 			}
 		}
+		
+		glDepthMask(GL_FALSE);
+		shadersManager.GetShader(skyboxShaderID).use();
+		view = glm::mat4(glm::mat3(view));
+		shadersManager.GetShader(skyboxShaderID).set("view", view);
+		glBindVertexArray(skyboxVAO);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
 
 		for (Model *model : DATA.models)
 		{
@@ -299,15 +308,6 @@ int main(int argc, char **argv)
 			glEnable(GL_DEPTH_TEST);
 			// render outline <<<
 		}
-		
-		glDepthMask(GL_FALSE);
-		shadersManager.GetShader(skyboxShaderID).use();
-		view = glm::mat4(glm::mat3(view));
-		shadersManager.GetShader(skyboxShaderID).set("view", view);
-		glBindVertexArray(skyboxVAO);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
 
 		shadersManager.GetShader(DATA.currentScreenShader).use();
 		frameBuffer.Draw();
@@ -621,6 +621,14 @@ void DrawGUI()
 
 		if (ImGui::Checkbox("Face culling", &DATA.faceCulling))
 			glSet(GL_CULL_FACE, DATA.faceCulling);
+
+		if (ImGui::Checkbox("Evening", &DATA.evening))
+		{
+			int shaderID = DATA.shadersManager.GetShaderID("vertex_skybox.glsl", "fragment_skybox.glsl");
+			auto& shader = DATA.shadersManager.GetShader(shaderID);
+			shader.use();
+			shader.set("evening", DATA.evening);
+		}
 
 		ImGui::End();
 	}

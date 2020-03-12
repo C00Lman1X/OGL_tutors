@@ -67,6 +67,8 @@ public:
     int postEffect = 0;
 
     static const glm::vec3 DEFAULT_CAMERA_POS;
+    
+    bool evening = false;
 
     // post-processing
     int SCREEN_SHADER_ID = 0;
